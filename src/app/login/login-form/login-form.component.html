@@ -1,0 +1,29 @@
+<form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <mat-form-field class="form-control">
+        <mat-label>אימייל</mat-label>
+        <input matInput formControlName="email" type="text" required />
+
+        <mat-error *ngIf="email?.hasError('required')">
+            חובה להזין אימייל
+        </mat-error>
+
+        <mat-error *ngIf="email?.hasError('email')">
+            האימייל לא תקין, יש להזין אימייל תקין
+        </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="form-control">
+        <mat-label>סיסמא</mat-label>
+        <input matInput formControlName="password" type="password" required />
+        <mat-error *ngIf="password?.hasError('required')">
+            חובה להזין סיסמא
+        </mat-error>
+    </mat-form-field>
+
+    <div class="form-footer">
+        <button [disabled]="form.invalid" mat-raised-button type="submit">
+            הכנס
+        </button>
+    </div>
+</form>
