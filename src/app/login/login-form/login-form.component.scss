@@ -25,3 +25,10 @@ mat-form-field {
 .form-footer {
     margin-top: 2rem;
 }
+
+mat-radio-group {
+    margin: 4rem 0 2rem;
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+}

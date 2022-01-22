@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { UserType } from 'src/app/models/user-type.enum';
+import { UserType } from '../../models/user-type.enum';
+
 
 @Component({
   selector: 'app-login-form',
@@ -16,6 +17,8 @@ export class LoginFormComponent implements OnInit {
   }> = new EventEmitter();
 
   form: FormGroup = new FormGroup({});
+
+  UserType = UserType;
 
   constructor(private fb: FormBuilder) { }
 

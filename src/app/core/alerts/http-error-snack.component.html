@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>שגיאה {{ data.status }}</h2>
+<div
+  *ngIf="
+    data.status == 403;
+    then accessPermissionErrorBlock;
+    else otherErrorBlock
+  "
+></div>
+
+<ng-template #accessPermissionErrorBlock>
+  <p>נראה שאין לך הרשאות לביצוע פעולה זאת</p>
+  <!-- Include the original URL to use in bug reports -->
+  <p class="alert-details">{{ data.url }}</p>
+</ng-template>
+
+<ng-template #otherErrorBlock>
+  <p>{{ data.message }}</p>
+  <p>{{ (data.error && data.error.message) || "" }}</p>
+</ng-template>

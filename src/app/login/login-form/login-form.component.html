@@ -1,5 +1,11 @@
 <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
 
+    <mat-radio-group class="form-control" formControlName="userType">
+        <mat-radio-button *ngFor="let type of UserType | keyvalue" [value]="type.value">
+            {{type.value}}
+        </mat-radio-button>
+    </mat-radio-group>
+
     <mat-form-field class="form-control">
         <mat-label>אימייל</mat-label>
         <input matInput formControlName="email" type="text" required />

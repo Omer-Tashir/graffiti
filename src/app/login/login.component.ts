@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { UserType } from '../models/user-type.enum';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -10,14 +10,10 @@ import { AuthService } from '../services/auth.service';
 export class LoginComponent {
 
   constructor(
-    private readonly router: Router,
     private readonly authService: AuthService
   ) { }
 
   login(loginData: any) {
-    this.authService
-      .login(loginData)
-      .then(() => this.router.navigate(['/dashboard']))
-      .catch((e: any) => window.alert(e.message));
+    this.authService.login(loginData.email, loginData.password, loginData.userType);
   }
 }

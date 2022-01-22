@@ -1,3 +1,9 @@
 :host {
     font-size: 1.6rem;
 }
+
+mat-toolbar {
+    a {
+        cursor: pointer;
+    }
+}

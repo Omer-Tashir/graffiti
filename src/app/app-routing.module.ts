@@ -1,28 +1,15 @@
 import { NgModule } from '@angular/core';
 import { Router, RouterModule, Routes } from '@angular/router';
 
-import {
-  canActivate,
-  redirectLoggedInTo,
-  redirectUnauthorizedTo,
-} from '@angular/fire/auth-guard';
-
+import { isLoggedInGuard } from './services/auth.guard';
+import { AuthService } from './services/auth.service';
 import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { AuthService } from './services/auth.service';
-
-const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(['login']);
-const redirectLoggedInToDashboard = () => redirectLoggedInTo(['dashboard']);
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
-    pathMatch: 'full',
-  },
-  {
-    path: '**',
-    redirectTo: 'login',
+    redirectTo: '/dashboard',
     pathMatch: 'full',
   },
   {
@@ -32,12 +19,12 @@ const routes: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    ...canActivate(redirectUnauthorizedToLogin),
+    canActivate: [isLoggedInGuard]
   },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload', scrollPositionRestoration: 'enabled' })],
   exports: [RouterModule]
 })
 export class AppRoutingModule { 

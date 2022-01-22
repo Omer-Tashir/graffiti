@@ -1,6 +1,9 @@
 * {
     font-weight: 400;
     font-family: 'Rubik', sans-serif;
+    text-decoration: none;
+    outline: none;
+    overflow-wrap: break-word;
 }
 
 html, body { 
@@ -17,6 +20,7 @@ body {
     overflow: hidden;
 
     &:before {
+        z-index: -1;
         content: ' ';
         display: block;
         position: absolute;
@@ -24,10 +28,31 @@ body {
         top: 0;
         width: 100%;
         height: 100%;
-        opacity: 0.2;
+        opacity: .2;
         background-repeat: no-repeat;
         background-position: 50% 0;
         background-size: cover;
         background-image: url(assets/background.png);
     }
+}
+
+.mat-snack-bar-container {
+  background: #ffffff;
+  font-size: 1.6rem;
+}
+
+.mat-snack-bar-container .mat-dialog-title {
+  color: rgb(38, 38, 38) !important;
+}
+
+.mat-snack-bar-container .alert-footer,
+.mat-snack-bar-container .mat-dialog-title,
+.mat-snack-bar-container p,
+.mat-snack-bar-container ul li {
+  color: rgb(38, 38, 38) !important;
+}
+
+.mat-snack-bar-container .alert-footer {
+  margin-bottom: 5px;
+  margin-top: 30px;
 }

@@ -1,10 +1,10 @@
-import { FirebaseUser } from "./firebase-user.interface";
 import { UserPermission } from "./user-permission.enum";
 import { UserType } from "./user-type.enum";
 
-export interface User extends FirebaseUser {
+export interface User {
+    uid: string;
     email: string;
-    password: string;
+    displayName: string;
     phoneNumber: string;
 
     type: UserType;
