@@ -1,0 +1,29 @@
+mat-card-content {
+  margin: 50px auto;
+  display: grid;
+  grid-template-columns: 300px 300px;
+  gap: 10px 25px;
+}
+
+.inner-grid {
+  display: grid;
+  grid-template-columns: 200px 100px;
+  gap: 25px;
+}
+
+.checkbox-group {
+  max-width: 600px;
+  margin: 50px auto;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-evenly;
+  gap: 25px;
+}
+
+.margin-top {
+  margin-top: 15px;
+}
+
+mat-dialog-content {
+  font-size: 14px;
+}

@@ -1,0 +1,158 @@
+<section>
+    <h3>הזמנות</h3>
+
+    <mat-form-field class="search">
+        <mat-label>חיפוש הזמנה</mat-label>
+        <input matInput (keyup)="applyFilter($event)" #input>
+    </mat-form-field>
+
+    <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+        <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+        <div class="rate-limit-reached" *ngIf="isRateLimitReached">
+            לא נמצאו הזמנות
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table mat-table [dataSource]="dataSource" class="table" matSort (matSortChange)="sortData($event)"
+            matSortActive="uid" matSortDisableClear matSortDirection="asc">
+
+            <ng-container matColumnDef="uid">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה הזמנה</th>
+                <td mat-cell *matCellDef="let row">{{row.uid}}</td>
+            </ng-container>
+
+            <div>
+                <p>כתובת מחסן מקבל:</p>
+                <ng-container matColumnDef="deliveryCity">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryCity">עיר</th>
+                    <td mat-cell *matCellDef="let row">{{row.deliveryCity}}</td>
+                </ng-container>
+                
+                <ng-container matColumnDef="deliveryAddress">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddress">רחוב</th>
+                    <td mat-cell *matCellDef="let row">{{row.deliveryAddress}}</td>
+                </ng-container>
+                
+                <ng-container matColumnDef="deliveryAddressNumber">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddressNumber">מספר בית</th>
+                    <td mat-cell *matCellDef="let row">{{row.deliveryAddressNumber}}</td>
+                </ng-container>
+            </div>
+
+            <ng-container matColumnDef="deliveryDate">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
+                <td mat-cell *matCellDef="let row">{{row.deliveryDate | dateFormat}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="orderWeight">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="orderWeight">משקל הזמנה</th>
+                <td mat-cell *matCellDef="let row">{{row.orderWeight}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="orderStatus">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="orderStatus">סטטוס הזמנה</th>
+                <td mat-cell *matCellDef="let row">{{row.orderStatus | enum:OrderStatus}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="important">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="important">הזמנה דחופה?</th>
+                <td mat-cell *matCellDef="let row">{{row.important ? 'כן' : 'לא'}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="description">הערות</th>
+                <td mat-cell *matCellDef="let row">{{row.description}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                    <div class="action-group">
+                        <button class="fab-btn" mat-fab color="primary" class="action-btn" matTooltip="עדכון פרטי הזמנה"
+                            (click)="edit(row)">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button class="fab-btn" mat-fab color="primary" class="action-btn" matTooltip="מחק הזמנה"
+                            (click)="delete(row)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [length]="resultsLength" showFirstLastButtons></mat-paginator>
+</section>
+
+<section class="form">
+    <h3>הוספת\עריכת הזמנה</h3>
+
+    <form [formGroup]="form" autocomplete="off" novalidate fxLayout="column wrap" fxLayoutAlign="center center"
+        fxLayoutGap="10px">
+
+        <mat-card-content>
+            <mat-form-field>
+                <input matInput type="text" placeholder="מספר הזמנה" formControlName="uid" id="uid">
+            </mat-form-field>
+            
+            <mat-form-field>
+                <input matInput type="date" placeholder="תאריך אספקה" formControlName="deliveryDate" id="deliveryDate">
+            </mat-form-field>
+            
+            <mat-form-field>
+                <input matInput type="number" placeholder="משקל" formControlName="orderWeight" id="orderWeight">
+            </mat-form-field>
+            
+            <mat-form-field>
+                <input matInput type="text" placeholder="עיר מגורים" formControlName="deliveryCity" id="deliveryCity" [matAutocomplete]="autoCities"
+                    (blur)="checkCity()" autocomplete="off">
+                <mat-autocomplete autoActiveFirstOption #autoCities="matAutocomplete" (optionSelected)="cityClick($event)">
+                    <mat-option *ngFor="let deliveryCity of filteredCities | async" [value]="deliveryCity.name">
+                        {{ deliveryCity.name }}
+                    </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+
+            <div class="inner-grid">
+                <mat-form-field>
+                    <input matInput type="text" placeholder="רחוב" formControlName="deliveryAddress" id="deliveryAddress"
+                        [matAutocomplete]="autoAddresses" (blur)="checkStreet()" autocomplete="off">
+                    <mat-autocomplete autoActiveFirstOption #autoAddresses="matAutocomplete" (optionSelected)="streetClick($event)">
+                        <mat-option *ngFor="let street of filteredStreets | async" [value]="street['שם_רחוב']">
+                            {{ street['שם_רחוב'] }}
+                        </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field>
+                    <input matInput type="number" placeholder="מס' בית" formControlName="deliveryAddressNumber" id="deliveryAddressNumber">
+                </mat-form-field>
+            </div>
+            
+            <mat-form-field>
+                <mat-label>סטטוס</mat-label>
+                <mat-select formControlName="orderStatus" id="orderStatus">
+                    <mat-option *ngFor="let type of OrderStatus | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field>
+                <input matInput type="text" placeholder="הערות" formControlName="description" id="description">
+            </mat-form-field>
+
+            <mat-checkbox formControlName="important" id="important">הזמנה דחופה</mat-checkbox>
+
+        </mat-card-content>
+
+        <mat-card-actions>
+            <button type="submit" mat-raised-button color="primary" [disabled]="!form?.valid || isLoading==true"
+                (click)="submit(form?.value)">שמור שינויים</button>
+            <button mat-raised-button color="primary" [disabled]="isLoading==true" (click)="reset()">ניקוי טופס</button>
+        </mat-card-actions>
+    </form>
+</section>

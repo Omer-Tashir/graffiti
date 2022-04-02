@@ -11,6 +11,7 @@ import { AppRoutingModule } from './app-routing.module';
 
 // Main component
 import { AppComponent } from './app.component';
+import { Globals } from './app.globals';
 
 // Angular Material Modules
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
@@ -44,11 +45,23 @@ import {
   TimeFormatPipe,
 } from './core/date-formatter/date-formatter';
 import { ArraySortPipe } from './core/sort.pipe';
+import { EnumToStringPipe } from './core/enum-to-string.pipe';
 
 // Shared presentation components and supporting services
 import { LoginComponent } from './login/login.component';
 import { LoginFormComponent } from './login/login-form/login-form.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { DashboardDriverComponent } from './dashboard/dashboard-driver/dashboard-driver.component';
+import { DashboardManagerComponent } from './dashboard/dashboard-manager/dashboard-manager.component';
+import { DashboardDistManagerComponent } from './dashboard/dashboard-dist-manager/dashboard-dist-manager.component';
+import { ViewUpdateRoutesComponent } from './dashboard/dashboard-dist-manager/view-update-routes/view-update-routes.component';
+import { SchedulingComponent } from './dashboard/dashboard-dist-manager/scheduling/scheduling.component';
+import { ProfileComponent } from './dashboard/dashboard-driver/profile/profile.component';
+import { DriverConstraintsComponent } from './dashboard/dashboard-driver/driver-constraints/driver-constraints.component';
+import { DriverRoutesComponent } from './dashboard/dashboard-driver/driver-routes/driver-routes.component';
+import { DataDialogComponent } from './core/data-dialog/data-dialog.component';
+import { DriversComponent } from './dashboard/dashboard-manager/drivers/drivers.component';
+import { OrdersComponent } from './dashboard/dashboard-manager/orders/orders.component';
 
 export const CUSTOM_DATE_FORMAT = {
   parse: {
@@ -72,6 +85,7 @@ export const CUSTOM_DATE_FORMAT = {
     BadRequestSnackComponent,
     HttpDownSnackComponent,
     HttpErrorSnackComponent,
+    EnumToStringPipe,
     ArraySortPipe,
     DateFormatPipe,
     YearDateFormatPipe,
@@ -81,6 +95,17 @@ export const CUSTOM_DATE_FORMAT = {
     LoginComponent,
     LoginFormComponent,
     DashboardComponent,
+    DashboardDriverComponent,
+    DashboardManagerComponent,
+    DashboardDistManagerComponent,
+    ViewUpdateRoutesComponent,
+    SchedulingComponent,
+    ProfileComponent,
+    DriverConstraintsComponent,
+    DriverRoutesComponent,
+    DataDialogComponent,
+    DriversComponent,
+    OrdersComponent,
   ],
   imports: [
     CommonModule,
@@ -106,14 +131,17 @@ export const CUSTOM_DATE_FORMAT = {
     ConflictSnackComponent,
     NotFoundSnackComponent,
     WarningDialogComponent,
+    DataDialogComponent,
   ],
   providers: [
+    EnumToStringPipe,
     ArraySortPipe,
     DateFormatPipe,
     YearDateFormatPipe,
     DateTimeFormatPipe,
     TimeFormatPipe,
     DatePipe,
+    Globals,
     { provide: MAT_DATE_LOCALE, useValue: 'he' },
     { provide: MAT_DATE_FORMATS, useValue: CUSTOM_DATE_FORMAT },
     { provide: MatPaginatorIntl, useClass: CustomMatPaginatorIntl },

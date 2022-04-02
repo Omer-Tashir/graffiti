@@ -1,0 +1,16 @@
+<div class="grid">
+    <p>פרטי עובד</p>
+    <p>צפייה במסלולים</p>
+</div>
+
+<div class="grid">
+    <div>
+        <button mat-button (click)="navigate(['dashboard','driver-constraints'])">הזנת אילוצים</button>
+        <button mat-button (click)="navigate(['dashboard','profile'])">פרטי עובד</button>
+    </div>
+
+    <div>
+        <button mat-button (click)="navigate(['dashboard','driver-routes'])">צפייה במסלולי עתיד</button>
+        <button mat-button (click)="navigate(['dashboard','driver-routes', 'history'])">צפייה במסלולי עבר</button>
+    </div>
+</div>

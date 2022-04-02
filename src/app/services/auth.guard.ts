@@ -64,3 +64,18 @@ export class isDistManagerGuard implements CanActivate {
     });
   }
 }
+
+@Injectable({
+  providedIn: 'root',
+})
+export class isDistManagerOrManageGuard implements CanActivate {
+  constructor() { }
+  canActivate(
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      !!sessionStorage.getItem('dist-manager') || !!sessionStorage.getItem('manager') ? resolve(true) : reject();
+    });
+  }
+}

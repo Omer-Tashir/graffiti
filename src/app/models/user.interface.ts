@@ -1,12 +1,9 @@
-import { UserPermission } from "./user-permission.enum";
-import { UserType } from "./user-type.enum";
-
 export interface User {
-    uid: string;
+    uid: any;
     email: string;
     displayName: string;
     phoneNumber: string;
-
-    type: UserType;
-    permissions: UserPermission[];
+    city: string;
+    address: string;
+    addressNumber: string;
 }

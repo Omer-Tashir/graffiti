@@ -1,0 +1,131 @@
+<h1 mat-dialog-title>{{ data.title }}</h1>
+
+<mat-dialog-content>
+
+  <form [formGroup]="form" autocomplete="off" novalidate fxLayout="column wrap"
+    fxLayoutAlign="center center" fxLayoutGap="10px">
+
+    <mat-card-content>
+
+      <mat-form-field *ngIf="data?.order?.uid">
+        <input matInput type="text" placeholder="מספר הזמנה" formControlName="uid" id="uid">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.order?.deliveryDate">
+        <input matInput type="date" placeholder="תאריך אספקה" formControlName="deliveryDate" id="deliveryDate">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.order?.orderWeight">
+        <input matInput type="number" placeholder="משקל" formControlName="orderWeight" id="orderWeight">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.order?.deliveryCity">
+        <input matInput type="text" placeholder="עיר" formControlName="deliveryCity" id="deliveryCity">
+      </mat-form-field>
+
+      <div class="inner-grid" *ngIf="data?.order?.deliveryAddress || data?.order?.deliveryAddressNumber">
+        <mat-form-field *ngIf="data?.order?.deliveryAddress">
+          <input matInput type="text" placeholder="רחוב" formControlName="deliveryAddress" id="deliveryAddress">
+        </mat-form-field>
+  
+        <mat-form-field *ngIf="data?.order?.deliveryAddressNumber">
+          <input matInput type="text" placeholder="מספר בית" formControlName="deliveryAddressNumber" id="deliveryAddressNumber">
+        </mat-form-field>
+      </div>
+
+      <mat-form-field *ngIf="data?.order?.orderStatus">
+        <input matInput type="text" placeholder="סטטוס" formControlName="orderStatus" id="orderStatus">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.order?.description">
+        <input matInput type="text" placeholder="הערות" formControlName="description" id="description">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.route?.uid">
+                <input matInput type="text" placeholder="מזהה מסלול" formControlName="uid" id="uid">
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.name">
+                <input matInput type="text" placeholder="שם המסלול" formControlName="name" id="name">
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.distributionAreas">
+                <mat-label>איזורי חלוקה</mat-label>
+                <mat-select multiple formControlName="distributionAreas" id="distributionAreas">
+                    <mat-option *ngFor="let area of distributionAreas" [value]="area">{{area}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.distributionDays">
+                <mat-label>ימי חלוקה</mat-label>
+                <mat-select multiple formControlName="distributionDays" id="distributionDays">
+                    <mat-option *ngFor="let day of days" [value]="day">{{day}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.licenseType">
+                <mat-label>סוג רישיון</mat-label>
+                <mat-select formControlName="licenseType" id="licenseType">
+                    <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.trackLength">
+                <input matInput type="number" placeholder="אורך מסלול בק״מ" formControlName="trackLength" id="trackLength">
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.route?.numPoint">
+                <input matInput type="number" placeholder="מספר נקודות פריקה" formControlName="numPoint" id="numPoint">
+            </mat-form-field>
+
+            <mat-form-field *ngIf="data?.driver?.uid">
+              <input matInput type="text" placeholder="מזהה נהג" formControlName="uid" id="uid">
+            </mat-form-field>
+            
+            <mat-form-field *ngIf="data?.driver?.displayName">
+              <input matInput type="text" placeholder="שם מלא" formControlName="displayName" id="displayName">
+            </mat-form-field>
+            
+            <mat-form-field *ngIf="data?.driver?.email">
+              <input matInput type="email" placeholder="אימייל" formControlName="email" id="email">
+            </mat-form-field>
+            
+            <mat-form-field *ngIf="data?.driver?.tel">
+              <input matInput type="tel" placeholder="מספר טלפון" formControlName="phoneNumber" id="phoneNumber">
+            </mat-form-field>
+            
+            <mat-form-field *ngIf="data?.driver?.city">
+              <input matInput type="text" placeholder="עיר מגורים" formControlName="city" id="city">
+            </mat-form-field>
+            
+            <div class="inner-grid" *ngIf="data?.driver?.address || data?.driver?.addressNumber">
+              <mat-form-field *ngIf="data?.driver?.address">
+                <input matInput type="text" placeholder="רחוב" formControlName="address" id="address">
+              </mat-form-field>
+            
+              <mat-form-field *ngIf="data?.driver?.addressNumber">
+                <input matInput type="number" placeholder="מס' בית" formControlName="addressNumber" id="addressNumber">
+              </mat-form-field>
+            </div>
+            
+            <mat-form-field *ngIf="data?.driver?.licenseType">
+              <mat-label>סוג רישיון</mat-label>
+              <mat-select formControlName="licenseType" id="licenseType">
+                <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field *ngIf="data?.driver?.workingStartDate">
+              <input matInput type="date" placeholder="תאריך תחילת עבודה" formControlName="workingStartDate" id="workingStartDate">
+            </mat-form-field>
+
+      </mat-card-content>
+
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">
+    <ng-container>סגור</ng-container>
+  </button>
+</mat-dialog-actions>

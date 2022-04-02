@@ -1,4 +1,27 @@
 <mat-toolbar>
-    
+    <p>
+        <img src="assets/user-types/{{getUserTypeIndex(userType)}}.png">
+        ברוך הבא {{loggedInUser.displayName}}
+    </p>
     <a (click)="logout()">התנתק</a>
 </mat-toolbar>
+
+<div class="dashboard-template">
+    <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
+
+    <ng-template #driver>
+        <app-dashboard-driver></app-dashboard-driver>
+    </ng-template>
+
+    <ng-template #manager>
+        <app-dashboard-manager></app-dashboard-manager>
+    </ng-template>
+
+    <ng-template #distManager>
+        <app-dashboard-dist-manager></app-dashboard-dist-manager>
+    </ng-template>
+</div>
+
+<div class="page-outlet">
+    <router-outlet name='page'></router-outlet>
+</div>

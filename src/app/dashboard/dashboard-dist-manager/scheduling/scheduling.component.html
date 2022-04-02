@@ -1,0 +1,127 @@
+<h1 class="title">הזמנות שטרם סופקו
+    <button [disabled]="ordersTable.data.length === 0" class="fab-btn run-algorithem" mat-fab color="primary" matTooltip="הרץ אלגוריתם שיבוץ יומי" (click)="runAlgorithem()">
+        <mat-icon>play_arrow</mat-icon>
+    </button>
+</h1>
+
+<div class="table-container table-container-warning">
+    <table mat-table [dataSource]="ordersTable" matSort matSortActive="deliveryDate" matSortDisableClear 
+        matSortDirection="asc">
+
+        <ng-container matColumnDef="uid">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מספר הזמנה</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showOrder(row)">{{row.uid}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="deliveryDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
+            <td mat-cell *matCellDef="let row">
+                {{row?.deliveryDate | dateFormat}}
+                <code class="d-date">({{getDeliveryDateStr(row?.deliveryDate)}})</code>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="orderWeight">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="orderWeight">משקל</th>
+            <td mat-cell *matCellDef="let row">{{row?.orderWeight}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="deliveryCity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryCity">עיר</th>
+            <td mat-cell *matCellDef="let row">{{row?.deliveryCity}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="deliveryAddress">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddress">רחוב</th>
+            <td mat-cell *matCellDef="let row">{{row?.deliveryAddress}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="deliveryAddressNumber">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddressNumber">מספר בית</th>
+            <td mat-cell *matCellDef="let row">{{row?.deliveryAddressNumber}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="orderStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="orderStatus">סטטוס</th>
+            <td mat-cell *matCellDef="let row">{{row?.orderStatus | enum: OrderStatus}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="important">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="important">הזמנה דחופה?</th>
+            <td mat-cell *matCellDef="let row">{{row?.important ? 'כן' : 'לא'}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="description">הערות</th>
+            <td mat-cell *matCellDef="let row">{{row?.description}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+                <div class="action-group">
+                    <button class="fab-btn" mat-fab color="primary" matTooltip="מחק" (click)="removeOrder(row)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="orderColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: orderColumns;"></tr>
+    </table>
+</div>
+
+<h1 class="title">טבלת שיבוצים</h1>
+
+<div class="table-container">
+    <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
+
+        <ng-container matColumnDef="uid">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה שיבוץ</th>
+            <td mat-cell *matCellDef="let row">{{row?.uid}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך</th>
+            <td mat-cell *matCellDef="let row">{{row?.date | dateFormat}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="route">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="route">מסלול</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showRoute(row.route)">{{row.route.name}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="order">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="order">הזמנה</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showOrder(row.order)">{{row.order.uid}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="driver">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="driver">נהג</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+                <div class="action-group">
+                    <button class="fab-btn" mat-fab color="primary" (click)="removeInlay(row)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="inlaysColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: inlaysColumns;"></tr>
+    </table>
+</div>

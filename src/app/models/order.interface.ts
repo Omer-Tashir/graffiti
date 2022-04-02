@@ -1,14 +1,15 @@
-import { Route } from "./route.interface";
-import { Driver } from "./driver.interface";
 import { Customer } from "./customer.interface";
+import { OrderStatus } from "./order-status.enum";
 
 export interface Order {
-    id: string;
+    uid: string;
+    deliveryCity: string; //כתובת מחסן מקבל
     deliveryAddress: string; //כתובת מחסן מקבל
-    deliveryDate: Date; //תאריך אספקה
+    deliveryAddressNumber: string; //כתובת מחסן מקבל
+    deliveryDate: any; //תאריך אספקה
     orderWeight: number; //משקל הזמנה
-
-    route: Route;
-    driver: Driver;
+    orderStatus: OrderStatus; //סטטוס הזמנה
+    important: boolean; // הזמנה דחופה
+    description: string;
     customer: Customer;
 }

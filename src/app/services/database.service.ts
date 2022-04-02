@@ -10,6 +10,12 @@ import { Manager } from '../models/manager.interface';
 import { Driver } from '../models/driver.interface';
 import { DistManager } from '../models/dist-manager.interface';
 import { UserType } from '../models/user-type.enum';
+import { DriverConstraint } from '../models/driver-constraint';
+import { HttpClient } from '@angular/common/http';
+import { Globals } from '../app.globals';
+import { Order } from '../models/order.interface';
+import { Inlay } from '../models/inlay.interfcae';
+import { Route } from '../models/route.interface';
 
 
 @Injectable({
@@ -18,6 +24,8 @@ import { UserType } from '../models/user-type.enum';
 export class DatabaseService {
 
     constructor(
+        private http: HttpClient,
+        private globals: Globals,
         private db: AngularFirestore,
         private SessionStorageService: SessionStorageService
     ) { }
@@ -26,8 +34,12 @@ export class DatabaseService {
         return forkJoin([
             this.getManagers().pipe(first()),
             this.getDrivers().pipe(first()),
+            this.getDriverConstraints().pipe(first()),
             this.getDistManagers().pipe(first()),
+            this.getOrders().pipe(first()),
+            this.getRoutes().pipe(first()),
         ]).pipe(
+            tap(() => this.getInlays().pipe(first())),
             map(results => !!results)
         );
     }
@@ -58,7 +70,9 @@ export class DatabaseService {
         if (!this.SessionStorageService.getItem('managers')) {
             return this.db.collection(`manager`).get().pipe(
                 map(result => result.docs.map(doc => {
-                    return <Manager>doc.data();
+                    const result = <Manager>doc.data();
+                    result.uid = doc.id;
+                    return result;
                 })),
                 tap(result => this.SessionStorageService.setItem('managers', JSON.stringify(result))),
                 catchError(err => of([])),
@@ -73,7 +87,9 @@ export class DatabaseService {
         if (!this.SessionStorageService.getItem('drivers')) {
             return this.db.collection(`driver`).get().pipe(
                 map(result => result.docs.map(doc => {
-                    return <Driver>doc.data();
+                    const result = <Driver>doc.data();
+                    result.uid = doc.id;
+                    return result;
                 })),
                 tap(result => this.SessionStorageService.setItem('drivers', JSON.stringify(result))),
                 catchError(err => of([])),
@@ -84,11 +100,31 @@ export class DatabaseService {
         }
     }
 
+    private getDriverConstraints(): Observable<DriverConstraint[]> {
+        if (!this.SessionStorageService.getItem('driver-constraints')) {
+            return this.db.collection(`driver-constraints`).get().pipe(
+                map(result => result.docs.map(doc => {
+                    const result = <DriverConstraint>doc.data();
+                    result.date = new Date(result.date.seconds * 1000);
+                    result.id = doc.id;
+                    return result;
+                })),
+                tap(result => this.SessionStorageService.setItem('driver-constraints', JSON.stringify(result))),
+                catchError(err => of([])),
+            );
+        }
+        else {
+            return of(JSON.parse(this.SessionStorageService.getItem('driver-constraints')));
+        }
+    }
+
     private getDistManagers(): Observable<DistManager[]> {
         if (!this.SessionStorageService.getItem('dist-managers')) {
             return this.db.collection(`dist-manager`).get().pipe(
                 map(result => result.docs.map(doc => {
-                    return <DistManager>doc.data();
+                    const result = <DistManager>doc.data();
+                    result.uid = doc.id;
+                    return result;
                 })),
                 tap(result => this.SessionStorageService.setItem('dist-managers', JSON.stringify(result))),
                 catchError(err => of([])),
@@ -97,5 +133,234 @@ export class DatabaseService {
         else {
             return of(JSON.parse(this.SessionStorageService.getItem('dist-managers')));
         }
+    }
+
+    private getOrders(): Observable<Order[]> {
+        if (!this.SessionStorageService.getItem('orders')) {
+            return this.db.collection(`order`).get().pipe(
+                map(result => result.docs.map(doc => {
+                    const result = <Order>doc.data();
+                    result.uid = doc.id;
+                    result.deliveryDate = result.deliveryDate;
+                    return result;
+                })),
+                tap(result => this.SessionStorageService.setItem('orders', JSON.stringify(result))),
+                catchError(err => of([])),
+            );
+        }
+        else {
+            return of(JSON.parse(this.SessionStorageService.getItem('orders')));
+        }
+    }
+
+    private getRoutes(): Observable<Route[]> {
+        if (!this.SessionStorageService.getItem('routes')) {
+            return this.db.collection(`route`).get().pipe(
+                map(result => result.docs.map(doc => {
+                    const result = <Route>doc.data();
+                    result.uid = doc.id;
+                    return result;
+                })),
+                tap(result => this.SessionStorageService.setItem('routes', JSON.stringify(result))),
+                catchError(err => of([])),
+            );
+        }
+        else {
+            return of(JSON.parse(this.SessionStorageService.getItem('routes')));
+        }
+    }
+
+    private getInlays(): Observable<Inlay[]> {
+        if (!this.SessionStorageService.getItem('inlays')) {
+            return this.db.collection(`inlay`).get().pipe(
+                map(result => result.docs.map(doc => {
+                    const result = <any>doc.data();
+                    result.uid = doc.id;
+                    result.date = new Date(result.date.seconds * 1000);
+                    result.orders = JSON.parse(this.SessionStorageService.getItem('orders')).filter((o: Order) => result.orders.includes(o.uid));
+                    result.driver = JSON.parse(this.SessionStorageService.getItem('drivers')).filter((d: Driver) => d.uid === result.driver);
+                    result.route = JSON.parse(this.SessionStorageService.getItem('routes')).filter((r: Route) => r.uid === result.route);
+                    return result;
+                })),
+                tap(result => this.SessionStorageService.setItem('inlays', JSON.stringify(result))),
+                catchError(err => of([])),
+            );
+        }
+        else {
+            return of(JSON.parse(this.SessionStorageService.getItem('inlays')));
+        }
+    }
+
+    updateDriver(driver: Driver): Promise<any> {
+        return this.db
+            .collection(`driver`)
+            .doc(driver.uid)
+            .set(driver).then(() => {
+                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'));
+                let index = drivers.findIndex((d: Driver) => d.uid === driver.uid);
+                drivers[index] = driver;
+                this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
+            }).then(() => { return driver.uid });
+    }
+
+    putDriver(driver: Driver, isNewRecord: boolean = true): Promise<any> {
+        return this.db
+            .collection(`driver`)
+            .doc(driver.uid)
+            .set(driver).then(() => {
+                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'));
+                if (isNewRecord) {
+                    drivers.push(driver);
+                    this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
+                }
+                else {
+                    let index = drivers.findIndex((d: Driver) => d.uid === driver.uid);
+                    if (index !== -1) {
+                        drivers[index] = driver;
+                        this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
+                    }
+                }
+            }).then(() => { return driver.uid });
+    }
+
+    putOrder(order: Order, isNewRecord: boolean = true): Promise<any> {
+        return this.db
+            .collection(`order`)
+            .doc(order.uid)
+            .set(order).then(() => {
+                let orders = JSON.parse(this.SessionStorageService.getItem('orders'));
+                if (isNewRecord) {
+                    orders.push(order);
+                    this.SessionStorageService.setItem('orders', JSON.stringify(orders));
+                }
+                else {
+                    let index = orders.findIndex((o: Order) => o.uid === order.uid);
+                    if (index !== -1) {
+                        orders[index] = order;
+                        this.SessionStorageService.setItem('orders', JSON.stringify(orders));
+                    }
+                }
+            }).then(() => { return order.uid });
+    }
+
+    putRoute(route: Route, isNewRecord: boolean = true): Promise<any> {
+        return this.db
+            .collection(`route`)
+            .doc(route.uid)
+            .set(route).then(() => {
+                let routes = JSON.parse(this.SessionStorageService.getItem('routes'));
+                if (isNewRecord) {
+                    routes.push(route);
+                    this.SessionStorageService.setItem('routes', JSON.stringify(routes));
+                }
+                else {
+                    let index = routes.findIndex((r: Route) => r.uid === route.uid);
+                    if (index !== -1) {
+                        routes[index] = route;
+                        this.SessionStorageService.setItem('routes', JSON.stringify(routes));
+                    }
+                }
+            }).then(() => { return route.uid });
+    }
+
+    putDriverConstraint(id: any, date: Date): Promise<any> {
+        const randomId = this.globals.randomAlphaNumeric(20);
+        return this.db
+            .collection(`driver-constraints`)
+            .doc(randomId)
+            .set({ driver: id, date, id: randomId }).then(() => {
+                let driver = JSON.parse(this.SessionStorageService.getItem('drivers')).find((d: Driver) => d.uid === id);
+                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints'));
+                driverConstraints.push({ id: randomId, driver, date } as DriverConstraint);
+                this.SessionStorageService.setItem('driver-constraints', JSON.stringify(driverConstraints));
+            }).then(() => { return randomId});
+    }
+
+    putInlay(inlay: Inlay): Promise<any> {
+        const randomId = this.globals.randomAlphaNumeric(20);
+        return this.db
+            .collection(`inlay`)
+            .doc(randomId)
+            .set({
+                uid: inlay.uid,
+                date: inlay.date,
+                order: inlay.order.uid,
+                driver: inlay.driver.uid,
+                route: inlay.route.uid,
+            }).then(() => {
+                let inlays = JSON.parse(this.SessionStorageService.getItem('inlays'));
+                inlays.push(inlay);
+                this.SessionStorageService.setItem('inlays', JSON.stringify(inlays));
+            }).then(() => { return randomId });
+    }
+
+    removeDriverConstraint(id: any): Promise<any> {
+        return this.db
+            .collection(`driver-constraints`)
+            .doc(id)
+            .delete()
+            .then(() => {
+                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints'));
+                driverConstraints = driverConstraints.filter((d: DriverConstraint) => d.id !== id);
+                this.SessionStorageService.setItem('driver-constraints', JSON.stringify(driverConstraints));
+            })
+    }
+
+    removeOrder(order: Order): Promise<any> {
+        return this.db
+            .collection(`order`)
+            .doc(order.uid)
+            .delete()
+            .then(() => {
+                let orders = JSON.parse(this.SessionStorageService.getItem('orders'));
+                orders = orders.filter((d: Order) => d.uid !== order.uid);
+                this.SessionStorageService.setItem('orders', JSON.stringify(orders));
+            })
+    }
+
+    removeRoute(route: Route): Promise<any> {
+        return this.db
+            .collection(`route`)
+            .doc(route.uid)
+            .delete()
+            .then(() => {
+                let routes = JSON.parse(this.SessionStorageService.getItem('routes'));
+                routes = routes.filter((d: Route) => d.uid !== route.uid);
+                this.SessionStorageService.setItem('routes', JSON.stringify(routes));
+            })
+    }
+
+    removeDriver(driver: Driver): Promise<any> {
+        return this.db
+            .collection(`driver`)
+            .doc(driver.uid)
+            .delete()
+            .then(() => {
+                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'));
+                drivers = drivers.filter((d: Driver) => d.uid !== driver.uid);
+                this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
+            })
+    }
+
+    removeInlay(inlay: Inlay): Promise<any> {
+        return this.db
+            .collection(`inlay`)
+            .doc(inlay.uid)
+            .delete()
+            .then(() => {
+                let inlays = JSON.parse(this.SessionStorageService.getItem('inlays'));
+                inlays = inlays.filter((d: Inlay) => d.uid !== inlay.uid);
+                this.SessionStorageService.setItem('inlays', JSON.stringify(inlays));
+            })
+    }
+
+    getCitiesJSON(): Observable<any> {
+        let response = this.http.get("./assets/israel-cities.json");
+        return response
+    }
+
+    getStreetsJSON(): Observable<any> {
+        let response = this.http.get("./assets/israel-streets.json");
+        return response
     }
 }

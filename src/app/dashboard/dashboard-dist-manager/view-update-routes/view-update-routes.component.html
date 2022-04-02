@@ -1,0 +1,154 @@
+<section>
+    <h3>מסלולים</h3>
+
+    <mat-form-field class="search">
+        <mat-label>חיפוש מסלול</mat-label>
+        <input matInput (keyup)="applyFilter($event)" #input>
+    </mat-form-field>
+
+    <div class="loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+        <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+        <div class="rate-limit-reached" *ngIf="isRateLimitReached">
+            לא נמצאו מסלולים
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table mat-table [dataSource]="dataSource" class="table" matSort (matSortChange)="sortData($event)"
+            matSortActive="uid" matSortDisableClear matSortDirection="asc">
+
+            <ng-container matColumnDef="uid">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה מסלול</th>
+                <td mat-cell *matCellDef="let row">{{row.uid}}</td>
+            </ng-container>
+
+            <div>
+                <p>כתובת מחסן מקבל:</p>
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="name">שם המסלול</th>
+                    <td mat-cell *matCellDef="let row">{{row.name}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="distributionAreas">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="distributionAreas">איזורי חלוקה</th>
+                    <td mat-cell *matCellDef="let row">
+                        <div class="chip-list-wrapper">
+                            <mat-chip-list #chipListDistributionAreas>
+                                <ng-container *ngFor="let area of row.distributionAreas | keyvalue">
+                                    <mat-chip class="cardinal-colors">
+                                        {{ area.value }}
+                                    </mat-chip>
+                                </ng-container>
+                            </mat-chip-list>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="distributionDays">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="distributionDays">ימי חלוקה</th>
+                    <td mat-cell *matCellDef="let row">
+                        <div class="chip-list-wrapper">
+                            <mat-chip-list #chipListDistributionDays>
+                                <ng-container *ngFor="let day of row.distributionDays | keyvalue">
+                                    <mat-chip class="cardinal-colors">
+                                        {{ day.value }}
+                                    </mat-chip>
+                                </ng-container>
+                            </mat-chip-list>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="licenseType">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="licenseType">סוג רישיון</th>
+                    <td mat-cell *matCellDef="let row">{{row.licenseType | enum:LicenseType}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="trackLength">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="trackLength">אורך המסלול בק״מ</th>
+                    <td mat-cell *matCellDef="let row">{{row.trackLength}}</td>
+                </ng-container>
+            </div>
+
+            <ng-container matColumnDef="numPoint">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="numPoint">מספר נקודות פריקה</th>
+                <td mat-cell *matCellDef="let row">{{row.numPoint}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                    <div class="action-group">
+                        <button class="fab-btn" mat-fab color="primary" class="action-btn" matTooltip="עדכון פרטי מסלול"
+                            (click)="edit(row)">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button class="fab-btn" mat-fab color="primary" class="action-btn" matTooltip="מחק מסלול"
+                            (click)="delete(row)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [length]="resultsLength" showFirstLastButtons></mat-paginator>
+</section>
+
+<section class="form">
+    <h3>הוספת\עריכת מסלול</h3>
+
+    <form [formGroup]="form" autocomplete="off" novalidate fxLayout="column wrap" fxLayoutAlign="center center"
+        fxLayoutGap="10px">
+
+        <mat-card-content>
+            <mat-form-field>
+                <input matInput type="text" placeholder="מזהה מסלול" formControlName="uid" id="uid">
+            </mat-form-field>
+
+            <mat-form-field>
+                <input matInput type="text" placeholder="שם המסלול" formControlName="name" id="name">
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>איזורי חלוקה</mat-label>
+                <mat-select multiple formControlName="distributionAreas" id="distributionAreas">
+                    <mat-option *ngFor="let area of distributionAreas" [value]="area">{{area}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>ימי חלוקה</mat-label>
+                <mat-select multiple formControlName="distributionDays" id="distributionDays">
+                    <mat-option *ngFor="let day of days" [value]="day">{{day}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>סוג רישיון</mat-label>
+                <mat-select formControlName="licenseType" id="licenseType">
+                    <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <input matInput type="number" placeholder="אורך מסלול בק״מ" formControlName="trackLength" id="trackLength">
+            </mat-form-field>
+
+            <mat-form-field>
+                <input matInput type="number" placeholder="מספר נקודות פריקה" formControlName="numPoint" id="numPoint">
+            </mat-form-field>
+
+        </mat-card-content>
+
+        <mat-card-actions>
+            <button type="submit" mat-raised-button color="primary" [disabled]="!form?.valid || isLoading==true"
+                (click)="submit(form?.value)">שמור שינויים</button>
+            <button mat-raised-button color="primary" [disabled]="isLoading==true" (click)="reset()">ניקוי טופס</button>
+        </mat-card-actions>
+    </form>
+</section>

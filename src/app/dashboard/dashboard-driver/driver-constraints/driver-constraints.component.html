@@ -1,0 +1,28 @@
+<section class="datepicker-section">
+    <p class="title">אנא סמן את הימים בהם לא תוכל לעבוד</p>
+
+    <mat-card-content>
+        <div class="datepicker">
+            <mat-form-field>
+                <mat-label>בחר תאריך</mat-label>
+                <input matInput [min]="minDate" [matDatepicker]="picker" [matDatepickerFilter]="dateFilter"
+                    (dateChange)="valueChanged($event.target.value)">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+    
+            <p class="dates-picked">אילוצים קיימים:</p>
+            <ul class="dates-picked-list">
+                <li *ngFor="let date of sortData">
+                    {{date | dateFormat}}
+                    <mat-icon (click)="deleteDate(date)">delete</mat-icon>
+                </li>
+            </ul>
+        </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+        <button mat-raised-button color="primary"
+            [disabled]="isLoading" (click)="submit()">אישור</button>
+    </mat-card-actions>
+</section>

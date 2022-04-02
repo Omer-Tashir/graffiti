@@ -1,0 +1,43 @@
+mat-card-content {
+  max-width: 700px;
+  margin: 50px auto;
+  display: grid;
+}
+
+mat-card-actions button {
+  margin-bottom: 50px;
+}
+
+mat-card-actions p {
+  display: inline-block;
+  padding-left: 7px;
+  margin-bottom: 25px;
+  font-size: 12px;
+}
+
+.datepicker-section {
+  margin-top: 50px;
+  text-align: center;
+}
+
+.datepicker-section .title {
+  font-size: 16px;
+  margin-bottom: 7px;
+}
+
+.datepicker mat-form-field {
+  max-width: 300px;
+  margin-bottom: 30px;
+}
+
+.dates-picked-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+mat-icon {
+  cursor: pointer;
+  position: relative;
+  top: 5px;
+}

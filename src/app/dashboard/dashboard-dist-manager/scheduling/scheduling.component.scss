@@ -1,0 +1,80 @@
+table {
+  width: 100%;
+}
+
+p {
+  font-size: 14px;
+}
+
+.title {
+  font-size: 20px;
+  max-width: 600px;
+  margin: 30px auto;
+  text-align: center;
+  font-weight: bold;
+  color: #6e6e6e;
+  text-decoration: underline;
+}
+
+.date-filter {
+  font-size: 14px;
+  max-width: 600px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: max-content 200px 200px;
+  gap: 30px;
+}
+
+.date-filter p {
+  line-height: 3;
+  padding-left: 10px;
+  font-size: 14px;
+}
+
+.table-container {
+  margin: 30px;
+  text-align: center;
+}
+
+.form {
+  padding-bottom: 30px;
+}
+
+.action-btn {
+  font-size: 14px;
+  line-height: 2;
+}
+
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.link {
+  color: #673AB7;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+th.mat-header-cell, td.mat-cell, td.mat-footer-cell {
+  padding: 5px 10px;
+  text-align: right;
+}
+
+td.mat-cell, td.mat-footer-cell {
+  height: 70px;
+}
+
+.run-algorithem {
+  margin-right: 15px;
+}
+
+.d-date {
+    padding: 4px 0;
+    font-size: 12px;
+    display: block;
+}
