@@ -31,7 +31,8 @@ export class AuthService {
     ) { }
 
     login(email: string, password: string, userType: UserType) {
-        this.db.login(email, userType).pipe(
+        of(this.afAuth.signOut()).pipe(
+            switchMap(() => this.db.login(email, userType)),
             first(),
             tap(res => {
                 if (!res) {
@@ -92,8 +93,9 @@ export class AuthService {
             this.alertService.httpError(error);
         }
 
-        this.afAuth.signOut();
-        sessionStorage.clear();
-        this.router.navigate(['login']);
+        this.afAuth.signOut().then(() => {
+            sessionStorage.clear();
+            this.router.navigate(['login']);
+        });
     }
 }

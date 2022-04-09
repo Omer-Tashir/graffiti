@@ -12,6 +12,7 @@ import { DriverConstraintsComponent } from './dashboard/dashboard-driver/driver-
 import { DriverRoutesComponent } from './dashboard/dashboard-driver/driver-routes/driver-routes.component';
 import { DriversComponent } from './dashboard/dashboard-manager/drivers/drivers.component';
 import { OrdersComponent } from './dashboard/dashboard-manager/orders/orders.component';
+import { OrdersTrackerComponent } from './dashboard/dashboard-manager/orders-tracker/orders-tracker.component';
 
 const routes: Routes = [
   {
@@ -61,6 +62,11 @@ const routes: Routes = [
         path: 'orders',
         component: OrdersComponent,
         canActivate: [isLoggedInGuard, isManagerGuard]
+      },
+      {
+        path: 'orders-tracker',
+        component: OrdersTrackerComponent,
+        canActivate: [isLoggedInGuard, isDistManagerOrManageGuard]
       },
       {
         path: 'driver-routes',

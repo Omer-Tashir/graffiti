@@ -1,0 +1,68 @@
+<app-orders></app-orders>
+
+<section>
+<h3>שיבוצים</h3>
+
+<div class="table-container">
+    <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
+
+        <ng-container matColumnDef="uid">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה שיבוץ</th>
+            <td mat-cell *matCellDef="let row">{{row?.uid}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך האספקה שנקבע</th>
+            <td mat-cell *matCellDef="let row">{{getDay(row?.date)}} {{row?.date | dateFormat}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="driver">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="driver">נהג</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="route">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="route">מסלול</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showRoute(row.route)">{{row.route.name}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="routeDetails">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="routeDetails">תיאור המסלול</th>
+            <td mat-cell *matCellDef="let row">
+                <p class="route-details-draw">{{getRouteDraw(row.orders)}}</p>
+                <span class="route-details-length">אורך המסלול: {{getRouteDistance(row.orders)}}</span>
+                <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="orders">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="orders">רשימת הזמנות</th>
+            <td mat-cell *matCellDef="let row">
+                <ul>
+                    <li *ngFor="let order of row.orders">
+                        <span class="link" (click)="showOrder(order)">{{order.uid}}</span>
+                    </li>
+                </ul>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+                <div class="action-group">
+                    <button class="fab-btn" mat-fab color="primary" (click)="removeInlay(row)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="inlaysColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: inlaysColumns;"></tr>
+    </table>
+</div>
+</section>

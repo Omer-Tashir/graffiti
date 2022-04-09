@@ -15,7 +15,7 @@
 
     <div class="table-container">
         <table mat-table [dataSource]="dataSource" class="table" matSort (matSortChange)="sortData($event)"
-            matSortActive="uid" matSortDisableClear matSortDirection="asc">
+            matSortActive="deliveryDate" matSortDisableClear matSortDirection="asc">
 
             <ng-container matColumnDef="uid">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה הזמנה</th>
@@ -58,6 +58,11 @@
             <ng-container matColumnDef="important">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header="important">הזמנה דחופה?</th>
                 <td mat-cell *matCellDef="let row">{{row.important ? 'כן' : 'לא'}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="distance">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header="distance">מרחק יעד ההזמנה מהמרלוג</th>
+                <td mat-cell *matCellDef="let row">{{getDistance(row.deliveryCity)}}</td>
             </ng-container>
 
             <ng-container matColumnDef="description">
@@ -105,7 +110,7 @@
             </mat-form-field>
             
             <mat-form-field>
-                <input matInput type="number" placeholder="משקל" formControlName="orderWeight" id="orderWeight">
+                <input matInput type="number" placeholder="משקל (טון)" formControlName="orderWeight" id="orderWeight">
             </mat-form-field>
             
             <mat-form-field>
@@ -137,7 +142,7 @@
             <mat-form-field>
                 <mat-label>סטטוס</mat-label>
                 <mat-select formControlName="orderStatus" id="orderStatus">
-                    <mat-option *ngFor="let type of OrderStatus | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                    <mat-option *ngFor="let type of OrderStatus | keyvalue" [value]="type.value"> {{type.value}} </mat-option>
                 </mat-select>
             </mat-form-field>
             

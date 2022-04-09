@@ -16,6 +16,8 @@ import { Globals } from '../app.globals';
 import { Order } from '../models/order.interface';
 import { Inlay } from '../models/inlay.interfcae';
 import { Route } from '../models/route.interface';
+import { OrderStatus } from '../models/order-status.enum';
+import { RunningInaly } from '../models/running-inlay.interface';
 
 
 @Injectable({
@@ -39,7 +41,7 @@ export class DatabaseService {
             this.getOrders().pipe(first()),
             this.getRoutes().pipe(first()),
         ]).pipe(
-            tap(() => this.getInlays().pipe(first())),
+            switchMap(() => this.getRunningInlays().pipe(first())),
             map(results => !!results)
         );
     }
@@ -170,24 +172,24 @@ export class DatabaseService {
         }
     }
 
-    private getInlays(): Observable<Inlay[]> {
-        if (!this.SessionStorageService.getItem('inlays')) {
-            return this.db.collection(`inlay`).get().pipe(
+    private getRunningInlays(): Observable<RunningInaly[]> {
+        if (!this.SessionStorageService.getItem('running-inlays')) {
+            return this.db.collection(`running-inlays`).get().pipe(
                 map(result => result.docs.map(doc => {
-                    const result = <any>doc.data();
+                    const result = <RunningInaly>doc.data();
                     result.uid = doc.id;
                     result.date = new Date(result.date.seconds * 1000);
                     result.orders = JSON.parse(this.SessionStorageService.getItem('orders')).filter((o: Order) => result.orders.includes(o.uid));
-                    result.driver = JSON.parse(this.SessionStorageService.getItem('drivers')).filter((d: Driver) => d.uid === result.driver);
-                    result.route = JSON.parse(this.SessionStorageService.getItem('routes')).filter((r: Route) => r.uid === result.route);
+                    result.driver = JSON.parse(this.SessionStorageService.getItem('drivers')).filter((d: Driver) => d.uid === result.driver)[0];
+                    result.route = JSON.parse(this.SessionStorageService.getItem('routes')).filter((r: Route) => r.uid === result.route)[0];
                     return result;
                 })),
-                tap(result => this.SessionStorageService.setItem('inlays', JSON.stringify(result))),
+                tap(result => this.SessionStorageService.setItem('running-inlays', JSON.stringify(result))),
                 catchError(err => of([])),
             );
         }
         else {
-            return of(JSON.parse(this.SessionStorageService.getItem('inlays')));
+            return of(JSON.parse(this.SessionStorageService.getItem('running-inlays')));
         }
     }
 
@@ -208,7 +210,7 @@ export class DatabaseService {
             .collection(`driver`)
             .doc(driver.uid)
             .set(driver).then(() => {
-                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'));
+                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers')) ?? [];
                 if (isNewRecord) {
                     drivers.push(driver);
                     this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
@@ -228,7 +230,7 @@ export class DatabaseService {
             .collection(`order`)
             .doc(order.uid)
             .set(order).then(() => {
-                let orders = JSON.parse(this.SessionStorageService.getItem('orders'));
+                let orders = JSON.parse(this.SessionStorageService.getItem('orders')) ?? [];
                 if (isNewRecord) {
                     orders.push(order);
                     this.SessionStorageService.setItem('orders', JSON.stringify(orders));
@@ -248,7 +250,7 @@ export class DatabaseService {
             .collection(`route`)
             .doc(route.uid)
             .set(route).then(() => {
-                let routes = JSON.parse(this.SessionStorageService.getItem('routes'));
+                let routes = JSON.parse(this.SessionStorageService.getItem('routes')) ?? [];
                 if (isNewRecord) {
                     routes.push(route);
                     this.SessionStorageService.setItem('routes', JSON.stringify(routes));
@@ -263,35 +265,51 @@ export class DatabaseService {
             }).then(() => { return route.uid });
     }
 
-    putDriverConstraint(id: any, date: Date): Promise<any> {
+    putDriverConstraint(id: any, date: Date, comment?: string): Promise<any> {
         const randomId = this.globals.randomAlphaNumeric(20);
         return this.db
             .collection(`driver-constraints`)
             .doc(randomId)
-            .set({ driver: id, date, id: randomId }).then(() => {
+            .set({ driver: id, date, id: randomId, comment }).then(() => {
                 let driver = JSON.parse(this.SessionStorageService.getItem('drivers')).find((d: Driver) => d.uid === id);
-                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints'));
-                driverConstraints.push({ id: randomId, driver, date } as DriverConstraint);
+                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints')) ?? [];
+                driverConstraints.push({ id: randomId, driver, date, comment } as DriverConstraint);
                 this.SessionStorageService.setItem('driver-constraints', JSON.stringify(driverConstraints));
             }).then(() => { return randomId});
     }
 
-    putInlay(inlay: Inlay): Promise<any> {
+    putRunningInlay(inlay: RunningInaly, isNewRecord: boolean = true): Promise<any> {
         const randomId = this.globals.randomAlphaNumeric(20);
+        inlay.uid = inlay.uid ?? randomId;
         return this.db
-            .collection(`inlay`)
-            .doc(randomId)
+            .collection(`running-inlays`)
+            .doc(inlay.uid)
             .set({
                 uid: inlay.uid,
-                date: inlay.date,
-                order: inlay.order.uid,
+                date: moment(inlay.date).toDate(),
+                orders: inlay.orders.map((o: Order)=>o.uid),
                 driver: inlay.driver.uid,
                 route: inlay.route.uid,
             }).then(() => {
-                let inlays = JSON.parse(this.SessionStorageService.getItem('inlays'));
-                inlays.push(inlay);
-                this.SessionStorageService.setItem('inlays', JSON.stringify(inlays));
-            }).then(() => { return randomId });
+                let inlays = JSON.parse(this.SessionStorageService.getItem('running-inlays')) ?? [];
+                if (isNewRecord) {
+                    inlays.push(inlay);
+                    this.SessionStorageService.setItem('running-inlays', JSON.stringify(inlays));
+                }
+                else {
+                    let index = inlays.findIndex((i: Inlay) => i.uid === inlay.uid);
+                    if (index !== -1) {
+                        inlays[index] = inlay;
+                        this.SessionStorageService.setItem('running-inlays', JSON.stringify(inlays));
+                    }
+                }
+
+                let orders = inlay.orders;
+                for (let order of orders) {
+                    this.putOrder(order, false);
+                }
+            })
+            .then(() => { return inlay.uid });
     }
 
     removeDriverConstraint(id: any): Promise<any> {
@@ -300,7 +318,7 @@ export class DatabaseService {
             .doc(id)
             .delete()
             .then(() => {
-                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints'));
+                let driverConstraints = JSON.parse(this.SessionStorageService.getItem('driver-constraints'))?? [];
                 driverConstraints = driverConstraints.filter((d: DriverConstraint) => d.id !== id);
                 this.SessionStorageService.setItem('driver-constraints', JSON.stringify(driverConstraints));
             })
@@ -312,7 +330,7 @@ export class DatabaseService {
             .doc(order.uid)
             .delete()
             .then(() => {
-                let orders = JSON.parse(this.SessionStorageService.getItem('orders'));
+                let orders = JSON.parse(this.SessionStorageService.getItem('orders'))?? [];
                 orders = orders.filter((d: Order) => d.uid !== order.uid);
                 this.SessionStorageService.setItem('orders', JSON.stringify(orders));
             })
@@ -324,7 +342,7 @@ export class DatabaseService {
             .doc(route.uid)
             .delete()
             .then(() => {
-                let routes = JSON.parse(this.SessionStorageService.getItem('routes'));
+                let routes = JSON.parse(this.SessionStorageService.getItem('routes'))?? [];
                 routes = routes.filter((d: Route) => d.uid !== route.uid);
                 this.SessionStorageService.setItem('routes', JSON.stringify(routes));
             })
@@ -336,21 +354,26 @@ export class DatabaseService {
             .doc(driver.uid)
             .delete()
             .then(() => {
-                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'));
+                let drivers = JSON.parse(this.SessionStorageService.getItem('drivers'))?? [];
                 drivers = drivers.filter((d: Driver) => d.uid !== driver.uid);
                 this.SessionStorageService.setItem('drivers', JSON.stringify(drivers));
             })
     }
 
-    removeInlay(inlay: Inlay): Promise<any> {
+    removeRunningInlay(inlay: RunningInaly): Promise<any> {
         return this.db
-            .collection(`inlay`)
+            .collection(`running-inlays`)
             .doc(inlay.uid)
             .delete()
             .then(() => {
-                let inlays = JSON.parse(this.SessionStorageService.getItem('inlays'));
-                inlays = inlays.filter((d: Inlay) => d.uid !== inlay.uid);
-                this.SessionStorageService.setItem('inlays', JSON.stringify(inlays));
+                let inlays = JSON.parse(this.SessionStorageService.getItem('running-inlays'))?? [];
+                inlays = inlays.filter((d: RunningInaly) => d.uid !== inlay.uid);
+                this.SessionStorageService.setItem('running-inlays', JSON.stringify(inlays));
+            }).then(() => {
+                inlay.orders.forEach((o: Order) => {
+                    o.orderStatus = OrderStatus.PENDING;
+                    this.putOrder(o, false);
+                });
             })
     }
 

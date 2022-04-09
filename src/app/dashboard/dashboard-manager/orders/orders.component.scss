@@ -1,5 +1,5 @@
 :host {
-  display: grid;
+    display: grid;
     gap: 50px;
     margin: 25px;
     font-size: 14px;
@@ -7,11 +7,6 @@
 
 section {
   width: 100%;
-}
-
-h3 {
-  font-size: 30px;
-  text-align: center;
 }
 
 mat-card-content {
@@ -31,6 +26,7 @@ mat-card-content.datepicker {
 mat-card-actions {
   display: flex;
   justify-content: center;
+  margin-bottom: 50px;
   gap: 20px;
 }
 

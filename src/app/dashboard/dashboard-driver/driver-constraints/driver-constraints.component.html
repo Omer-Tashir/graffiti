@@ -3,19 +3,27 @@
 
     <mat-card-content>
         <div class="datepicker">
-            <mat-form-field>
-                <mat-label>בחר תאריך</mat-label>
-                <input matInput [min]="minDate" [matDatepicker]="picker" [matDatepickerFilter]="dateFilter"
-                    (dateChange)="valueChanged($event.target.value)">
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-            </mat-form-field>
+            <div class="flex">
+                <mat-form-field>
+                    <mat-label>בחר תאריך</mat-label>
+                    <input matInput [min]="minDate" [matDatepicker]="picker" [matDatepickerFilter]="dateFilter"
+                        (dateChange)="valueChanged($event.target.value)">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+    
+                <mat-form-field>
+                    <input matInput type="text" placeholder="הערות" [formControl]="description" id="description">
+                </mat-form-field>
+    
+                <button (click)="add()" mat-raised-button color="primary" [disabled]="!tempDate">הוסף</button>
+            </div>
     
             <p class="dates-picked">אילוצים קיימים:</p>
             <ul class="dates-picked-list">
-                <li *ngFor="let date of sortData">
-                    {{date | dateFormat}}
-                    <mat-icon (click)="deleteDate(date)">delete</mat-icon>
+                <li *ngFor="let date of pickedArr | keyvalue: keyDescOrder">
+                    {{date.key | dateFormat}}
+                    <mat-icon (click)="deleteDate(date.key)">delete</mat-icon>
                 </li>
             </ul>
         </div>
@@ -23,6 +31,6 @@
 
     <mat-card-actions>
         <button mat-raised-button color="primary"
-            [disabled]="isLoading" (click)="submit()">אישור</button>
+            [disabled]="isLoading" (click)="submit()">שמור רשימת אילוצים</button>
     </mat-card-actions>
 </section>

@@ -9,18 +9,23 @@ import { Globals } from 'src/app/app.globals';
 import { SessionStorageService } from 'src/app/core/session-storage-service';
 import { FormControl, FormGroup } from '@angular/forms';
 
+import * as moment from "moment/moment";
+import { KeyValue } from '@angular/common';
+
 @Component({
   selector: 'app-driver-constraints',
   templateUrl: './driver-constraints.component.html',
   styleUrls: ['./driver-constraints.component.scss']
 })
 export class DriverConstraintsComponent implements OnInit {
-  pickedArr: Date[] = [];
+  pickedArr: Map<Date, string> = new Map<Date, string>();
   minDate: Date | undefined;
   isLoading: boolean = false;
   driver: Driver | undefined;
+  description: FormControl = new FormControl();
   constraints: DriverConstraint[] = [];
   loggedInUserId: any;
+  tempDate: any;
 
   range = new FormGroup({
     start: new FormControl(),
@@ -33,11 +38,15 @@ export class DriverConstraintsComponent implements OnInit {
     }
 
     if (this.constraints?.length > 0) {
-      return this.pickedArr?.findIndex(p => new Date(p)?.getTime() == new Date(date).getTime()) == -1 && this.constraints.findIndex(s => new Date(s.date).getTime() == new Date(date)?.getTime()) == -1
+      return Array.from(this.pickedArr.keys())?.findIndex(p => moment(p).toDate().getTime() == moment(date).toDate().getTime()) == -1 && this.constraints.findIndex(s => moment(s.date).toDate().getTime() == moment(date).toDate().getTime()) == -1
     }
 
-    return this.pickedArr?.findIndex(p => new Date(p)?.getTime() == new Date(date).getTime()) == -1;
+    return Array.from(this.pickedArr.keys())?.findIndex(p => moment(p).toDate().getTime() == moment(date).toDate().getTime()) == -1;
   };
+
+  keyDescOrder = (a: KeyValue<Date,string>, b: KeyValue<Date,string>): number => {
+    return a.key > b.key ? -1 : (b.key > a.key ? 1 : 0);
+  }
 
   constructor(
     public router: Router,
@@ -56,72 +65,71 @@ export class DriverConstraintsComponent implements OnInit {
     if (this.driver) {
       this.constraints = driverConstraints?.filter((a: any) => a.driver == this.loggedInUserId || a.driver.uid == this.loggedInUserId).map((constraint: DriverConstraint) => {
         constraint.driver = this.driver;
-        constraint.date = new Date(constraint.date);
+        constraint.date = moment(constraint.date).toDate();
         constraint.id = constraint.id;
+        constraint.comment = constraint.comment;
         return constraint;
       });
 
-      this.pickedArr = this.constraints?.map(c => new Date(c.date));
+      this.pickedArr = this.constraints.reduce(function (map, obj) {
+        map.set(obj.date, obj.comment);
+        return map;
+      }, new Map<Date, string>());
     }
   }
 
-  get sortData() {
-    return this.pickedArr?.sort((a, b) => {
-      return <any>(a) - <any>(b);
-    });
+  add(): void {
+    this.pickedArr.set(this.tempDate, this.description.value);
+    this.description.reset();
+    this.tempDate = undefined;
   }
 
   valueChanged(value: any) {
-    this.pickedArr?.push(value);
+    this.tempDate = moment(value).toDate();
   }
 
   deleteDate(date: Date) {
     if (!this.isLoading) {
-      this.pickedArr = this.pickedArr?.filter(p => new Date(p)?.getTime() != new Date(date)?.getTime());
+      this.pickedArr.delete(date);
     }
   }
 
   submit() {
-    let pickedArrTimes = this.pickedArr.map(p => new Date(p).getTime());
-    let constraintsTimes = this.constraints.map(c => new Date(c.date).getTime());
-
     // everything was deleted remove all
-    if (!this.pickedArr.length && !!this.constraints.length) {
+    if (!this.pickedArr.size && !!this.constraints.length) {
       this.isLoading = true;
       for (let i = 0; i < this.constraints?.length; i++) {
         this.db.removeDriverConstraint(this.constraints[i].id).then(() => {
-          this.pickedArr = [];
+          this.pickedArr = new Map<Date, string>();
           this.constraints = [];
           this.isLoading = false;
         });
       }
     }
 
-    for (let i = 0; i < pickedArrTimes?.length; i++) {
-      if (constraintsTimes.includes(pickedArrTimes[i])) {
+    for (let key of this.pickedArr.keys()) {
+      if (this.constraints.map(c=>c.date).includes(key)) {
         continue;
       }
       // new record
-      else if (!constraintsTimes.includes(pickedArrTimes[i])) {
+      else if (!this.constraints.map(c => c.date).includes(key)) {
         this.isLoading = true;
-        this.db.putDriverConstraint(this.driver?.uid, new Date(pickedArrTimes[i])).then(id => {
-          constraintsTimes.push(pickedArrTimes[i]);
-          this.constraints.push({ date: this.pickedArr[i], driver: this.driver, id } as DriverConstraint);
+        this.db.putDriverConstraint(this.driver?.uid, moment(key).toDate(), this.pickedArr.get(key)).then(id => {
+          this.constraints.push({ date: key, driver: this.driver, id } as DriverConstraint);
           this.isLoading = false;
         });
       }
     }
 
-    for (let i = 0; i < constraintsTimes?.length; i++) {
-      if (pickedArrTimes.includes(constraintsTimes[i])) {
+    for (let i = 0; i < this.constraints.length; i++) {
+      if (this.pickedArr.has(this.constraints[i].date)) {
         continue;
       }
       else {
         this.isLoading = true;
-        const constraint = this.constraints.find(c => new Date(c.date).getTime() === constraintsTimes[i]);
+        const constraint = this.constraints.find(c => moment(c.date).toDate().getTime() === moment(this.constraints[i].date).toDate().getTime());
         this.db.removeDriverConstraint(constraint?.id).then(() => {
-          constraintsTimes = constraintsTimes.filter(c => c !== constraintsTimes[i]);
-          this.constraints = this.constraints.filter(c => new Date(c.date).getTime() !== constraintsTimes[i]);
+          this.constraints = this.constraints.filter(c => moment(c.date).toDate().getTime() !== moment(this.constraints[i].date).toDate().getTime());
           this.isLoading = false;
         });
       }
@@ -131,7 +139,7 @@ export class DriverConstraintsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.minDate = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    this.minDate = moment().toDate();
 
     if (sessionStorage.getItem('user') != null) {
       let temp = sessionStorage.getItem('user');

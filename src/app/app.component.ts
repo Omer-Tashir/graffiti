@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
+import { SessionStorageService } from './core/session-storage-service';
 import * as moment from 'moment/moment';
 @Component({
   selector: 'app-root',
@@ -8,8 +8,14 @@ import * as moment from 'moment/moment';
 })
 export class AppComponent implements OnInit {
   
-  constructor() {
+  constructor(
+    private sessionStorageService: SessionStorageService
+  ) {
     moment.locale("he");
+  }
+
+  isUserLoggedIn(): boolean {
+    return !!this.sessionStorageService.getItem('user');
   }
   
   ngOnInit(): void {

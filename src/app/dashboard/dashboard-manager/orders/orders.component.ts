@@ -24,7 +24,7 @@ import { DatabaseService } from 'src/app/services/database.service';
   styleUrls: ['./orders.component.scss']
 })
 export class OrdersComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['uid', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'description', 'actions'];
+  displayedColumns: string[] = ['uid', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'distance', 'description', 'actions'];
   dataSource!: MatTableDataSource<Order>;
   form: FormGroup = new FormGroup({});
   resultsLength = 0;
@@ -68,7 +68,12 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     private dialog: MatDialog,
     private datePipe: DatePipe,
     public globals: Globals
-  ) {}
+  ) { }
+  
+  getDistance(city: string) {
+    const c = this.cities.find(c => c.name === city);
+    return c?.marlog_distance ? `${c.marlog_distance} ק״מ` : 'לא ידוע';
+  }
 
   hasError = (controlName: string, errorName: string) => {
     return this.form?.controls[controlName].dirty && this.form?.controls[controlName].hasError(errorName);
@@ -162,7 +167,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     };
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
-    this.sortData({ active: 'uid', direction: 'asc' });
+    this.sortData({ active: 'deliveryDate', direction: 'asc' });
   }
 
   applyFilter(event: Event) {
@@ -188,7 +193,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         case 'orderStatus': return this.compare(a.orderStatus, b.orderStatus, isAsc);
         case 'important': return this.compare(a.important, b.important, isAsc);
         case 'description': return this.compare(a.description, b.description, isAsc);
-        case 'deliveryDate': return this.compare(a.deliveryDate.getTime(), b.deliveryDate.getTime(), isAsc);
+        case 'deliveryDate': return this.compare(a.deliveryDate, b.deliveryDate, isAsc);
         default: return 0;
       }
     });

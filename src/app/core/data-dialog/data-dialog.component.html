@@ -16,7 +16,7 @@
       </mat-form-field>
 
       <mat-form-field *ngIf="data?.order?.orderWeight">
-        <input matInput type="number" placeholder="משקל" formControlName="orderWeight" id="orderWeight">
+        <input matInput type="number" placeholder="משקל (טון)" formControlName="orderWeight" id="orderWeight">
       </mat-form-field>
 
       <mat-form-field *ngIf="data?.order?.deliveryCity">
@@ -66,7 +66,7 @@
             <mat-form-field *ngIf="data?.route?.licenseType">
                 <mat-label>סוג רישיון</mat-label>
                 <mat-select formControlName="licenseType" id="licenseType">
-                    <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                    <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.value"> {{type.value}} </mat-option>
                 </mat-select>
             </mat-form-field>
 
@@ -111,7 +111,7 @@
             <mat-form-field *ngIf="data?.driver?.licenseType">
               <mat-label>סוג רישיון</mat-label>
               <mat-select formControlName="licenseType" id="licenseType">
-                <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.key"> {{type.value}} </mat-option>
+                <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.value"> {{type.value}} </mat-option>
               </mat-select>
             </mat-form-field>
             

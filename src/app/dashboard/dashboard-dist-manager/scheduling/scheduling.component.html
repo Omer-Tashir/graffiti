@@ -1,8 +1,18 @@
 <h1 class="title">הזמנות שטרם סופקו
-    <button [disabled]="ordersTable.data.length === 0" class="fab-btn run-algorithem" mat-fab color="primary" matTooltip="הרץ אלגוריתם שיבוץ יומי" (click)="runAlgorithem()">
+    <button [disabled]="ordersTable.data.length === 0" class="fab-btn run-algorithem" mat-fab color="primary" matTooltip="הרץ אלגוריתם שיבוץ" (click)="runAlgorithem()">
         <mat-icon>play_arrow</mat-icon>
     </button>
 </h1>
+
+<div class="date-filters">
+    <mat-form-field>
+        <input matInput type="date" placeholder="מתאריך אספקה" [formControl]="fromDeliveryDate" id="fromDeliveryDate">
+    </mat-form-field>
+
+    <mat-form-field>
+        <input matInput type="date" placeholder="עד לתאריך אספקה" [formControl]="toDeliveryDate" id="toDeliveryDate">
+    </mat-form-field>
+</div>
 
 <div class="table-container table-container-warning">
     <table mat-table [dataSource]="ordersTable" matSort matSortActive="deliveryDate" matSortDisableClear 
@@ -18,13 +28,13 @@
         <ng-container matColumnDef="deliveryDate">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
             <td mat-cell *matCellDef="let row">
-                {{row?.deliveryDate | dateFormat}}
+                {{getDay(row?.deliveryDate)}} {{row?.deliveryDate | dateFormat}}
                 <code class="d-date">({{getDeliveryDateStr(row?.deliveryDate)}})</code>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="orderWeight">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="orderWeight">משקל</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="orderWeight">משקל (טון)</th>
             <td mat-cell *matCellDef="let row">{{row?.orderWeight}}</td>
         </ng-container>
 
@@ -70,23 +80,30 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="orderColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: orderColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: orderColumns;" [class.delay]="isOrderDelay(row)"></tr>
     </table>
 </div>
 
-<h1 class="title">טבלת שיבוצים</h1>
+<h1 class="title">רשימת שיבוצים</h1>
 
 <div class="table-container">
     <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
 
         <ng-container matColumnDef="uid">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה שיבוץ</th>
-            <td mat-cell *matCellDef="let row">{{row?.uid}}</td>
+            <td mat-cell *matCellDef="let row">{{row?.uid || 'שיבוץ חדש'}}</td>
         </ng-container>
 
         <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך</th>
-            <td mat-cell *matCellDef="let row">{{row?.date | dateFormat}}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך האספקה שנקבע</th>
+            <td mat-cell *matCellDef="let row">{{getDay(row?.date)}} {{row?.date | dateFormat}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="driver">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="driver">נהג</th>
+            <td mat-cell *matCellDef="let row">
+                <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+            </td>
         </ng-container>
 
         <ng-container matColumnDef="route">
@@ -96,17 +113,23 @@
             </td>
         </ng-container>
 
-        <ng-container matColumnDef="order">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="order">הזמנה</th>
+        <ng-container matColumnDef="routeDetails">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="routeDetails">תיאור המסלול</th>
             <td mat-cell *matCellDef="let row">
-                <span class="link" (click)="showOrder(row.order)">{{row.order.uid}}</span>
+                <p class="route-details-draw">{{getRouteDraw(row.orders)}}</p>
+                <span class="route-details-length">אורך המסלול: {{getRouteDistance(row.orders)}}</span>
+                <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
             </td>
         </ng-container>
 
-        <ng-container matColumnDef="driver">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="driver">נהג</th>
+        <ng-container matColumnDef="orders">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="orders">רשימת הזמנות</th>
             <td mat-cell *matCellDef="let row">
-                <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+                <ul>
+                    <li *ngFor="let order of row.orders">
+                        <span class="link" (click)="showOrder(order)">{{order.uid}}</span>
+                    </li>
+                </ul>
             </td>
         </ng-container>
 
@@ -124,4 +147,8 @@
         <tr mat-header-row *matHeaderRowDef="inlaysColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: inlaysColumns;"></tr>
     </table>
+    
+    <button [disabled]="!inlays?.length" class="approve-btn" mat-raised-button color="primary" matTooltip="אישור השיבוצים החדשים שהוצעו על ידי האלגוריתם" (click)="inlaysAgree()">
+        <mat-icon>done</mat-icon> אישור השיבוצים החדשים
+    </button>
 </div>

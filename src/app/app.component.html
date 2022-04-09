@@ -1,3 +1,7 @@
-<router-outlet></router-outlet>
+<div class="app-content">
 
-<footer>© כל הזכויות שמורות - נייר חדרה | פותח על ידי: מיכל אראל, יובל ערוסי</footer>
+    <router-outlet></router-outlet>
+    
+    <footer *ngIf="isUserLoggedIn()">© כל הזכויות שמורות - נייר חדרה | פותח על ידי: מיכל אראל, יובל ערוסי</footer>
+
+</div>

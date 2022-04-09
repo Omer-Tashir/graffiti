@@ -29,6 +29,11 @@
 
 html, body { 
     height: 100%; 
+    overflow: hidden;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
 }
 
 html {
@@ -84,6 +89,11 @@ table {
 }
 
 td.mat-cell {
-    padding: 10px !important;
-    font-size: 14px !important;
+  padding: 10px !important;
+  font-size: 14px !important;
+}
+
+h3 {
+    font-size: 30px;
+    text-align: center;
 }

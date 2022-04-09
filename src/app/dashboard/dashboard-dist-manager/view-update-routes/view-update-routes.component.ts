@@ -25,7 +25,7 @@ import { DatabaseService } from 'src/app/services/database.service';
   styleUrls: ['./view-update-routes.component.scss']
 })
 export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['uid', 'name', 'distributionAreas', 'distributionDays', 'licenseType', 'trackLength', 'numPoint', 'actions'];
+  displayedColumns: string[] = ['uid', 'name', 'distributionAreas', 'distributionDays', 'licenseType', 'actions'];
   dataSource!: MatTableDataSource<Route>;
   form: FormGroup = new FormGroup({});
   LicenseType = LicenseType;
@@ -187,8 +187,6 @@ export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
         case 'distributionAreas': return this.compare(a.distributionAreas.toString(), b.distributionAreas.toString(), isAsc);
         case 'distributionDays': return this.compare(a.distributionDays.toString(), b.distributionDays.toString(), isAsc);
         case 'licenseType': return this.compare(a.licenseType, b.licenseType, isAsc);
-        case 'trackLength': return this.compare(a.trackLength, b.trackLength, isAsc);
-        case 'numPoint': return this.compare(a.numPoint, b.numPoint, isAsc);
         default: return 0;
       }
     });
@@ -209,8 +207,6 @@ export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
       distributionAreas: new FormControl(route?.distributionAreas ?? []),
       distributionDays: new FormControl(route?.distributionDays ?? []),
       licenseType: new FormControl(route?.licenseType),
-      trackLength: new FormControl(route?.trackLength),
-      numPoint: new FormControl(route?.numPoint),
     });
 
     this.db.getCitiesJSON().subscribe(data => {

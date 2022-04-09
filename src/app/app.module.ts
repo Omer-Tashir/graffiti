@@ -62,6 +62,7 @@ import { DriverRoutesComponent } from './dashboard/dashboard-driver/driver-route
 import { DataDialogComponent } from './core/data-dialog/data-dialog.component';
 import { DriversComponent } from './dashboard/dashboard-manager/drivers/drivers.component';
 import { OrdersComponent } from './dashboard/dashboard-manager/orders/orders.component';
+import { OrdersTrackerComponent } from './dashboard/dashboard-manager/orders-tracker/orders-tracker.component';
 
 export const CUSTOM_DATE_FORMAT = {
   parse: {
@@ -106,6 +107,7 @@ export const CUSTOM_DATE_FORMAT = {
     DataDialogComponent,
     DriversComponent,
     OrdersComponent,
+    OrdersTrackerComponent,
   ],
   imports: [
     CommonModule,
