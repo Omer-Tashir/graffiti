@@ -13,6 +13,7 @@ import { DriverRoutesComponent } from './dashboard/dashboard-driver/driver-route
 import { DriversComponent } from './dashboard/dashboard-manager/drivers/drivers.component';
 import { OrdersComponent } from './dashboard/dashboard-manager/orders/orders.component';
 import { OrdersTrackerComponent } from './dashboard/dashboard-manager/orders-tracker/orders-tracker.component';
+import { ReportsComponent } from './dashboard/dashboard-manager/reports/reports.component';
 
 const routes: Routes = [
   {
@@ -64,20 +65,19 @@ const routes: Routes = [
         canActivate: [isLoggedInGuard, isManagerGuard]
       },
       {
+        path: 'reports',
+        component: ReportsComponent,
+        canActivate: [isLoggedInGuard, isDistManagerOrManageGuard]
+      },
+      {
         path: 'orders-tracker',
         component: OrdersTrackerComponent,
         canActivate: [isLoggedInGuard, isDistManagerOrManageGuard]
       },
       {
-        path: 'driver-routes',
+        path: 'driver-routes/:type',
         component: DriverRoutesComponent,
         canActivate: [isLoggedInGuard, isDriverGuard],
-        children: [{
-          path: 'history',
-          data: { history: true },
-          component: DriverRoutesComponent,
-          canActivate: [isLoggedInGuard, isDriverGuard],
-        }]
       },
     ]
   },

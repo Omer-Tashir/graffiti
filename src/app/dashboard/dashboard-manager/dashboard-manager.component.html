@@ -1,12 +1,11 @@
 <div class="grid">
-    <p>הפקת דוחות</p>
+    <p>דוחות</p>
     <p>ניהול מערכת</p>
 </div>
 
 <div class="grid">
     <div>
-        <button mat-button>היסטוריית דוחות</button>
-        <button mat-button>הנפקת דוחות</button>
+        <button mat-button (click)="navigate(['dashboard','reports'])">הנפקת דוחות</button>
     </div>
     <div>
         <button mat-button (click)="navigate(['dashboard','drivers'])">ניהול נהגים</button>

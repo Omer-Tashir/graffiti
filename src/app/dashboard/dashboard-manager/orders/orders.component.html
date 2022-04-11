@@ -1,6 +1,11 @@
 <section>
     <h3>הזמנות</h3>
 
+    <div class="excel">
+        <mat-label>טעינת קובץ הזמנות</mat-label>
+        <input type="file" (change)="onFileChange($event)">
+    </div>
+
     <mat-form-field class="search">
         <mat-label>חיפוש הזמנה</mat-label>
         <input matInput (keyup)="applyFilter($event)" #input>

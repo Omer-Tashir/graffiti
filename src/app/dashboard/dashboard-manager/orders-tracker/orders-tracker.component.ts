@@ -158,6 +158,10 @@ export class OrdersTrackerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  getRouteTotalWeight(orders: Order[]): number {
+    return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
+  }
+
   ngAfterViewInit(): void {
     this.loadingSubscription = this.isLoading.subscribe();
     this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));

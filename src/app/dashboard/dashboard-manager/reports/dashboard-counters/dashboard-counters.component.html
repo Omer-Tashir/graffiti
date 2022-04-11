@@ -1,0 +1,64 @@
+<div class="dashboard-counters">
+    <div class="dashboard-counters__item" id="inlays">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--inlays">
+            <mat-icon>departure_board</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="inlays.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">סה״כ שיבוצים</p>
+        </div>
+    </div>
+
+    <div class="dashboard-counters__separator"></div>
+
+    <div class="dashboard-counters__item" id="orders">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--orders">
+            <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="orders.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">סה״כ הזמנות</p>
+        </div>
+    </div>
+
+    <div class="dashboard-counters__item" id="drivers">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--drivers">
+            <mat-icon>local_shipping</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="drivers.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">נהגים</p>
+        </div>
+    </div>
+    
+    <div class="dashboard-counters__separator"></div>
+
+    <div class="dashboard-counters__item" id="routes">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--routes">
+            <mat-icon>map</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="routes.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">מסלולים</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-by-location__canvas">
+
+    <h1>סטטוס הזמנות</h1>
+
+    <canvas baseChart class="dashboard-by-location__canvas" [data]="doughnutChartData" [labels]="doughnutChartLabels"
+        [chartType]="doughnutChartType" [plugins]="doughnutChartPlugins" [options]="doughnutChartOptions"
+        [colors]="doughnutChartColors">
+    </canvas>
+
+</div>

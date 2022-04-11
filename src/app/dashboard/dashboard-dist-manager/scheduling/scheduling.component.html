@@ -119,6 +119,7 @@
                 <p class="route-details-draw">{{getRouteDraw(row.orders)}}</p>
                 <span class="route-details-length">אורך המסלול: {{getRouteDistance(row.orders)}}</span>
                 <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
+                <span class="route-details-length">משקל כולל: {{getRouteTotalWeight(row.orders)}} טון</span>
             </td>
         </ng-container>
 

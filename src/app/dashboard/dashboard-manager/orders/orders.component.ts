@@ -18,6 +18,9 @@ import { OrderStatus } from 'src/app/models/order-status.enum';
 import { Order } from 'src/app/models/order.interface';
 import { DatabaseService } from 'src/app/services/database.service';
 
+import * as moment from 'moment';
+import * as XLSX from 'xlsx';
+
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
@@ -285,6 +288,68 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     const filterValue = value;
     let response = this.streets.filter(street => street['שם_רחוב'].includes(filterValue));
     return response
+  }
+
+  onFileChange(event: any) {
+    this.isLoading = true;
+
+    /* wire up file reader */
+    const target: DataTransfer = <DataTransfer>(event.target);
+    if (target.files.length !== 1) {
+      throw new Error('Cannot use multiple files');
+    }
+    const reader: FileReader = new FileReader();
+    reader.readAsBinaryString(target.files[0]);
+    reader.onload = (e: any) => {
+      /* create workbook */
+      const binarystr: string = e.target.result;
+      const wb: XLSX.WorkBook = XLSX.read(binarystr, { type: 'binary' });
+
+      /* selected the first sheet */
+      const wsname: string = wb.SheetNames[0];
+      const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+
+      /* save data */
+      const data: any = XLSX.utils.sheet_to_json(ws); // to get 2d array pass 2nd parameter as object {header: 1}
+      console.log(data);
+
+      for (let i = 0; i < data.length; i++) {
+        let order: Order = {
+          uid: this.globals.randomAlphaNumeric(20),
+          deliveryCity: data[i]['עיר'] ?? '',
+          deliveryAddress: data[i]['רחוב'] ?? '',
+          deliveryAddressNumber: data[i]['מספר בית'] ?? '',
+          deliveryDate: moment(data[i]['תאריך אספקה'], "DD/MM/YYYY").toDate(),
+          orderWeight: +data[i]['משקל הזמנה'] ?? '',
+          orderStatus: OrderStatus.PENDING,
+          important: data[i]['הזמנה דחופה?'] ? data[i]['הזמנה דחופה?'] == 'לא' ? false : true : false,
+          description: data[i]['הערות'] ?? ''
+        } as Order;
+
+        this.db
+          .putOrder(order, true)
+          .then(() => {
+            this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
+            this.initDatasource(this.orders);
+          })
+          .catch((error) => {
+            console.log(error);
+            this.alertService.httpError(error);
+          })
+          .finally(() => {
+            this.isLoading = false;
+          });
+      }
+
+      this.alertService.ok(
+        'הפועלה בוצעה בהצלחה',
+        'הקובץ נטען במערכת'
+      );
+
+      this.isNewRecord = true;
+      this.form.reset();
+      this.initForm({} as Order);
+    };
   }
 
   ngOnInit(): void {

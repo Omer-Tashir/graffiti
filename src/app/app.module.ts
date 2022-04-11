@@ -47,6 +47,9 @@ import {
 import { ArraySortPipe } from './core/sort.pipe';
 import { EnumToStringPipe } from './core/enum-to-string.pipe';
 
+import { ChartsModule } from 'ng2-charts';
+import { CountUpModule } from 'ngx-countup';
+
 // Shared presentation components and supporting services
 import { LoginComponent } from './login/login.component';
 import { LoginFormComponent } from './login/login-form/login-form.component';
@@ -63,6 +66,8 @@ import { DataDialogComponent } from './core/data-dialog/data-dialog.component';
 import { DriversComponent } from './dashboard/dashboard-manager/drivers/drivers.component';
 import { OrdersComponent } from './dashboard/dashboard-manager/orders/orders.component';
 import { OrdersTrackerComponent } from './dashboard/dashboard-manager/orders-tracker/orders-tracker.component';
+import { ReportsComponent } from './dashboard/dashboard-manager/reports/reports.component';
+import { DashboardCountersComponent } from './dashboard/dashboard-manager/reports/dashboard-counters/dashboard-counters.component';
 
 export const CUSTOM_DATE_FORMAT = {
   parse: {
@@ -108,6 +113,8 @@ export const CUSTOM_DATE_FORMAT = {
     DriversComponent,
     OrdersComponent,
     OrdersTrackerComponent,
+    ReportsComponent,
+    DashboardCountersComponent
   ],
   imports: [
     CommonModule,
@@ -118,6 +125,8 @@ export const CUSTOM_DATE_FORMAT = {
     ReactiveFormsModule,
     BrowserAnimationsModule,
     CustomMaterialModule,
+    ChartsModule,
+    CountUpModule,
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFirestoreModule, // imports firebase/firestore, only needed for database features
     AngularFireAuthModule, // imports firebase/auth, only needed for auth features

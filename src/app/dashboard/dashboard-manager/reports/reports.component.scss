@@ -1,0 +1,68 @@
+:host {
+    height: 100%;
+    width: 100%;
+    display: block;
+    font-size: 14px;
+    position: absolute;
+    top: 0;
+}
+
+.dashboard {
+    &__header {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    &__header-title {
+    }
+
+    &__tag {
+        margin-left: 1.8rem;
+        background: #72aff2;
+        color: #fff;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 2px;
+        padding: 7px 14px;
+        border-radius: 4px;
+    }
+
+    &__counters {
+        
+    }
+
+    &__graphs {
+        display: grid;
+        grid-template-columns: auto min-content;
+        grid-template-rows: auto auto;
+        grid-gap: 2.8rem 2.6rem;
+    }
+
+    &__graph {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 12px 0 #f2f2f2;
+        padding: 2.5rem 3.2rem;
+    }
+
+    &__requests-by-status-graph {
+        grid-column: 1/2;
+        grid-row: 1/2;
+    }
+
+    &__requests-by-location-graph {
+        display: flex;
+        grid-column: 2/3;
+        grid-row: 1/2;
+        flex-direction: column;
+        justify-content: center;
+        width: 41.6rem;
+    }
+
+    &__incoming-requests-graph {
+        margin-bottom: 6.3rem;
+        grid-column: 1/-1;
+        grid-row: 2/3;
+    }
+}

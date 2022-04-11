@@ -1,0 +1,93 @@
+:host {
+    margin: 4rem;
+    display: block;
+}
+
+.dashboard-counters {
+    padding: 4rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 12px 0 #f2f2f2;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    &__item {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+        gap: 15px;
+    }
+
+    &__item-svg-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 5rem;
+        height: 5rem;
+        border-radius: 10px;
+
+        &--orders {
+            background: #ffeb3b78;
+        }
+
+        &--inlays {
+            background: #ff572224;
+        }
+
+        &--drivers {
+            background: #00bcd42e;
+        }
+
+        &--routes {
+            background: #4caf503d;
+        }
+    }
+
+    &__item-svg {
+        width: 18px;
+        height: 21px;
+    }
+
+    &__item-count {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 700;
+        margin-top: 10px;
+        pointer-events: none;
+    }
+
+    &__item-description {
+        font-weight: 400;
+        margin: 5px 0;
+    }
+
+    &__separator {
+        width: 1px;
+        height: 6.2rem;
+        background: #e9e9ea;
+        margin: 0 3.1rem 0 2.2rem;
+    }
+}
+
+.dashboard-by-location {
+    &__title {
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 1.5;
+        margin-bottom: auto;
+    }
+
+    &__canvas {
+        position: relative;
+        margin-bottom: auto;
+    }
+
+    &__canvas {
+        width: 100% !important;
+        height: 50vh !important;
+        padding-top: 2rem;
+    }
+}

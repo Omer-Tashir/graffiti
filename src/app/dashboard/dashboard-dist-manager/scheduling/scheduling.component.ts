@@ -279,6 +279,10 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  getRouteTotalWeight(orders: Order[]): number {
+    return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
+  }
+
   ngAfterViewInit(): void {
     combineLatest([this.fromDeliveryDate.valueChanges.pipe(startWith(this.fromDeliveryDate.value)), this.toDeliveryDate.valueChanges.pipe(startWith(this.toDeliveryDate.value))]).pipe(
       tap(() => this.setOrders())
