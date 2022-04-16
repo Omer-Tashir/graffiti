@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -25,7 +25,7 @@ import { DatabaseService } from 'src/app/services/database.service';
   styleUrls: ['./view-update-routes.component.scss']
 })
 export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['uid', 'name', 'distributionAreas', 'distributionDays', 'licenseType', 'actions'];
+  displayedColumns: string[] = ['name', 'distributionAreas', 'distributionDays', 'licenseType', 'actions'];
   dataSource!: MatTableDataSource<Route>;
   form: FormGroup = new FormGroup({});
   LicenseType = LicenseType;
@@ -69,7 +69,8 @@ export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
     private enumToStringPipe: EnumToStringPipe,
     private dialog: MatDialog,
     private datePipe: DatePipe,
-    public globals: Globals
+    public globals: Globals,
+    public location: Location,
   ) {}
 
   hasError = (controlName: string, errorName: string) => {
@@ -203,10 +204,10 @@ export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
   private initForm(route: Route): void {
     this.form = new FormGroup({
       uid: new FormControl(route?.uid ?? this.globals.randomAlphaNumeric(20), [Validators.required]),
-      name: new FormControl(route?.name),
-      distributionAreas: new FormControl(route?.distributionAreas ?? []),
-      distributionDays: new FormControl(route?.distributionDays ?? []),
-      licenseType: new FormControl(route?.licenseType),
+      name: new FormControl(route?.name, [Validators.required]),
+      distributionAreas: new FormControl(route?.distributionAreas ?? [], [Validators.required]),
+      distributionDays: new FormControl(route?.distributionDays ?? [], [Validators.required]),
+      licenseType: new FormControl(route?.licenseType, [Validators.required]),
     });
 
     this.db.getCitiesJSON().subscribe(data => {

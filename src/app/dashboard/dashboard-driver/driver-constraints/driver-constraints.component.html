@@ -1,9 +1,19 @@
+<button mat-raised-button class="back-btn" (click)="location.back()">חזור לתפריט</button>
+
 <section class="datepicker-section">
-    <p class="title">אנא סמן את הימים בהם לא תוכל לעבוד</p>
+    <p *ngIf="!distManager" class="title">אנא סמן את הימים בהם לא תוכל לעבוד</p>
+    <p *ngIf="!!distManager" class="title">אנא בחר נהג וסמן את האילוצים</p>
 
     <mat-card-content>
         <div class="datepicker">
             <div class="flex">
+                <mat-form-field *ngIf="!!distManager">
+                    <mat-label>נהג</mat-label>
+                    <mat-select [formControl]="driverId" id="driverId">
+                        <mat-option *ngFor="let d of drivers" [value]="d.uid"> {{d.displayName}} </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
                 <mat-form-field>
                     <mat-label>בחר תאריך</mat-label>
                     <input matInput [min]="minDate" [matDatepicker]="picker" [matDatepickerFilter]="dateFilter"
@@ -22,7 +32,7 @@
             <p class="dates-picked">אילוצים קיימים:</p>
             <ul class="dates-picked-list">
                 <li *ngFor="let date of pickedArr | keyvalue: keyDescOrder">
-                    {{date.key | dateFormat}}
+                    {{date.key | dateFormat}} {{date.value ? ' - הערות: ' + date.value : ''}}
                     <mat-icon (click)="deleteDate(date.key)">delete</mat-icon>
                 </li>
             </ul>

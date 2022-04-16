@@ -7,8 +7,16 @@
 
     <mat-card-content>
 
-      <mat-form-field *ngIf="data?.order?.uid">
+      <!-- <mat-form-field *ngIf="data?.order?.uid">
         <input matInput type="text" placeholder="מספר הזמנה" formControlName="uid" id="uid">
+      </mat-form-field> -->
+
+      <mat-form-field *ngIf="data?.order?.name">
+        <input matInput type="text" placeholder="שם לקוח" formControlName="name" id="name">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="data?.order?.phone">
+        <input matInput type="tel" placeholder="טלפון" formControlName="phone" id="phone">
       </mat-form-field>
 
       <mat-form-field *ngIf="data?.order?.deliveryDate">
@@ -41,9 +49,9 @@
         <input matInput type="text" placeholder="הערות" formControlName="description" id="description">
       </mat-form-field>
 
-      <mat-form-field *ngIf="data?.route?.uid">
+      <!-- <mat-form-field *ngIf="data?.route?.uid">
                 <input matInput type="text" placeholder="מזהה מסלול" formControlName="uid" id="uid">
-            </mat-form-field>
+            </mat-form-field> -->
 
             <mat-form-field *ngIf="data?.route?.name">
                 <input matInput type="text" placeholder="שם המסלול" formControlName="name" id="name">
@@ -78,9 +86,9 @@
                 <input matInput type="number" placeholder="מספר נקודות פריקה" formControlName="numPoint" id="numPoint">
             </mat-form-field>
 
-            <mat-form-field *ngIf="data?.driver?.uid">
+            <!-- <mat-form-field *ngIf="data?.driver?.uid">
               <input matInput type="text" placeholder="מזהה נהג" formControlName="uid" id="uid">
-            </mat-form-field>
+            </mat-form-field> -->
             
             <mat-form-field *ngIf="data?.driver?.displayName">
               <input matInput type="text" placeholder="שם מלא" formControlName="displayName" id="displayName">

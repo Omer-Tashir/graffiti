@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -27,7 +27,7 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./orders.component.scss']
 })
 export class OrdersComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['uid', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'distance', 'description', 'actions'];
+  displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'distance', 'description', 'actions'];
   dataSource!: MatTableDataSource<Order>;
   form: FormGroup = new FormGroup({});
   resultsLength = 0;
@@ -70,7 +70,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     private enumToStringPipe: EnumToStringPipe,
     private dialog: MatDialog,
     private datePipe: DatePipe,
-    public globals: Globals
+    public globals: Globals,
+    public location: Location,
   ) { }
   
   getDistance(city: string) {
@@ -189,6 +190,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       const isAsc = sort.direction === 'asc';
       switch (sort.active) {
         case 'uid': return this.compare(a.uid, b.uid, isAsc);
+        case 'name': return this.compare(a.name, b.name, isAsc);
+        case 'phone': return this.compare(a.phone, b.phone, isAsc);
         case 'deliveryCity': return this.compare(a.deliveryCity, b.deliveryCity, isAsc);
         case 'deliveryAddress': return this.compare(a.deliveryAddress, b.deliveryAddress, isAsc);
         case 'deliveryAddressNumber': return this.compare(a.deliveryAddressNumber, b.deliveryAddressNumber, isAsc);
@@ -213,12 +216,14 @@ export class OrdersComponent implements OnInit, AfterViewInit {
   private initForm(order: Order): void {
     this.form = new FormGroup({
       uid: new FormControl(order?.uid ?? this.globals.randomAlphaNumeric(20), [Validators.required]),
-      deliveryDate: new FormControl(this.datePipe.transform(order?.deliveryDate, 'yyyy-MM-dd')),
-      orderWeight: new FormControl(order?.orderWeight),
-      deliveryCity: new FormControl(order?.deliveryCity),
-      deliveryAddress: new FormControl(order?.deliveryAddress),
+      name: new FormControl(order?.name, [Validators.required]),
+      phone: new FormControl(order?.phone, [Validators.required]),
+      deliveryDate: new FormControl(this.datePipe.transform(order?.deliveryDate, 'yyyy-MM-dd'), [Validators.required]),
+      orderWeight: new FormControl(order?.orderWeight, [Validators.required]),
+      deliveryCity: new FormControl(order?.deliveryCity, [Validators.required]),
+      deliveryAddress: new FormControl(order?.deliveryAddress, [Validators.required]),
       deliveryAddressNumber: new FormControl(order?.deliveryAddressNumber),
-      orderStatus: new FormControl(order?.orderStatus),
+      orderStatus: new FormControl(order?.orderStatus, [Validators.required]),
       description: new FormControl(order?.description),
       important: new FormControl(order?.important),
     });
@@ -316,6 +321,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       for (let i = 0; i < data.length; i++) {
         let order: Order = {
           uid: this.globals.randomAlphaNumeric(20),
+          name: data[i]['שם לקוח'] ?? '',
+          phone: data[i]['טלפון'] ?? '',
           deliveryCity: data[i]['עיר'] ?? '',
           deliveryAddress: data[i]['רחוב'] ?? '',
           deliveryAddressNumber: data[i]['מספר בית'] ?? '',

@@ -40,7 +40,9 @@ export class DataDialogComponent {
     
     if (data?.order) {      
       this.form = new FormGroup({
-        uid: new FormControl({ value: this.data?.order?.uid, disabled: true}),
+        uid: new FormControl({ value: this.data?.order?.uid, disabled: true }),
+        name: new FormControl({ value: this.data?.order?.name, disabled: true}),
+        phone: new FormControl({ value: this.data?.order?.phone, disabled: true}),
         deliveryDate: new FormControl({ value: this.datePipe.transform(this.data?.order?.deliveryDate, 'yyyy-MM-dd'), disabled: true}),
         orderWeight: new FormControl({ value: this.data?.order?.orderWeight, disabled: true}),
         deliveryCity: new FormControl({ value: this.data?.order?.deliveryCity, disabled: true}),

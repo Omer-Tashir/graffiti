@@ -114,3 +114,14 @@ tr.delay {
     font-weight: bold;
     margin-left: 10px;
 }
+
+.remove-order {
+    width: 30px;
+    height: 30px;
+    vertical-align: middle;
+
+    .mat-icon {
+      font-size: 16px;
+      line-height: 0;
+    }
+}

@@ -29,7 +29,7 @@ import { SessionStorageService } from 'src/app/core/session-storage-service';
 import { DataDialogComponent } from 'src/app/core/data-dialog/data-dialog.component';
 import { OrderStatus } from 'src/app/models/order-status.enum';
 import { Driver } from 'src/app/models/driver.interface';
-import { DatePipe } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { catchError, first, startWith, tap } from 'rxjs/operators';
 import { RunningInaly } from 'src/app/models/running-inlay.interface';
 
@@ -55,8 +55,8 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
 
   private cities: any[] = [];
   existDisplayedColumns: string[] = [];
-  orderColumns: string[] = ['uid', 'deliveryDate', 'orderWeight', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'orderStatus', 'important', 'description', 'actions'];
-  inlaysColumns: string[] = ['uid', 'date', 'driver', 'route', 'routeDetails', 'orders', 'actions'];
+  orderColumns: string[] = ['name', 'phone', 'deliveryDate', 'orderWeight', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'orderStatus', 'important', 'description', 'actions'];
+  inlaysColumns: string[] = ['date', 'driver', 'route', 'routeDetails', 'orders', 'actions'];
   recommendationsDisplayedColumns: string[] = ['order', 'route', 'score'];
 
   OrderStatus = OrderStatus;
@@ -72,6 +72,7 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
   inlaysTable: MatTableDataSource<RunningInaly> = new MatTableDataSource<RunningInaly>([]);
 
   constructor(
+    public location: Location,
     private router: Router,
     private datePipe: DatePipe,
     private db: DatabaseService,
@@ -157,6 +158,22 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  removeOrderFromRoute(inlay: RunningInaly, order: Order) {
+    const dialogRef = this.dialog.open(WarningDialogComponent, {
+      width: '600px',
+      data: {
+        title: 'האם את\\ה בטוח\\ה?',
+        message: `ההזמנה תמחק מהמסלול`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result != undefined && result != null) {
+        inlay.orders = inlay.orders.filter((o: Order) => o.uid !== order.uid);
+      }
+    });
+  }
+
   private setOrders() {
     this.orders = this.originalOrders
       .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
@@ -207,7 +224,7 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
       width: '700px',
       data: {
         order,
-        title: 'הזמנה: ' + order.uid,
+        title: 'הזמנה: ' + `${order.deliveryCity}, ${order.deliveryAddress} ${order.deliveryAddressNumber}`,
       },
     });
   }
@@ -281,6 +298,18 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
 
   getRouteTotalWeight(orders: Order[]): number {
     return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
+  }
+
+  getRouteTotalTime(orders: Order[]) {
+    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
+    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
+    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
+      let time = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance) / 100;
+      time += ((5 / 60) * orders.length);
+      return time >= 1 ? `${Math.floor(time)} שעות, ${((time - Math.floor(time)) * 60).toFixed(0)} דקות` : `${(time * 60).toFixed(0)} דקות`;
+    }
+
+    return 'לא ידוע';
   }
 
   ngAfterViewInit(): void {

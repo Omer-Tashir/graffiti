@@ -10,7 +10,7 @@ import { SessionStorageService } from 'src/app/core/session-storage-service';
 import { FormControl, FormGroup } from '@angular/forms';
 
 import * as moment from "moment/moment";
-import { KeyValue } from '@angular/common';
+import { KeyValue, Location } from '@angular/common';
 
 @Component({
   selector: 'app-driver-constraints',
@@ -22,9 +22,12 @@ export class DriverConstraintsComponent implements OnInit {
   minDate: Date | undefined;
   isLoading: boolean = false;
   driver: Driver | undefined;
+  drivers: Driver[] = [];
+  driverId: FormControl = new FormControl();
   description: FormControl = new FormControl();
   constraints: DriverConstraint[] = [];
   loggedInUserId: any;
+  distManager: any;
   tempDate: any;
 
   range = new FormGroup({
@@ -49,6 +52,7 @@ export class DriverConstraintsComponent implements OnInit {
   }
 
   constructor(
+    public location: Location,
     public router: Router,
     public db: DatabaseService,
     public afAuth: AngularFireAuth,
@@ -57,13 +61,12 @@ export class DriverConstraintsComponent implements OnInit {
     public globals: Globals
   ) { }
 
-  private getDriver() {
-    const drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+  private getDriver(driverUid?: string) {
     const driverConstraints = JSON.parse(this.sessionStorageService.getItem('driver-constraints'));
+    this.driver = this.drivers.find((a: any) => a.uid == (driverUid ?? this.loggedInUserId));
 
-    this.driver = drivers.find((a: any) => a.uid == this.loggedInUserId);
     if (this.driver) {
-      this.constraints = driverConstraints?.filter((a: any) => a.driver == this.loggedInUserId || a.driver.uid == this.loggedInUserId).map((constraint: DriverConstraint) => {
+      this.constraints = driverConstraints?.filter((a: any) => a.driver == (driverUid ?? this.loggedInUserId) || a.driver.uid == (driverUid ?? this.loggedInUserId)).map((constraint: DriverConstraint) => {
         constraint.driver = this.driver;
         constraint.date = moment(constraint.date).toDate();
         constraint.id = constraint.id;
@@ -139,20 +142,30 @@ export class DriverConstraintsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.minDate = moment().toDate();
+    this.minDate = moment().add(2, 'day').toDate();
+    this.distManager = sessionStorage.getItem('dist-manager');
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
 
     if (sessionStorage.getItem('user') != null) {
       let temp = sessionStorage.getItem('user');
       if (temp != null) {
         let user = JSON.parse(temp);
         this.loggedInUserId = user?.uid;
-        this.getDriver();
+        if (!this.distManager) {
+          this.getDriver();
+        }
       }
     } else {
       this.afAuth.authState.subscribe((auth) => {
         this.loggedInUserId = auth?.uid;
-        this.getDriver();
+        if (!this.distManager) {
+          this.getDriver();
+        }
       });
+    }
+
+    if (!!this.distManager) {
+      this.driverId.valueChanges.subscribe(driver => this.getDriver(driver));
     }
   }
 }

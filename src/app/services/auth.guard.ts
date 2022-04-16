@@ -53,6 +53,21 @@ export class isDriverGuard implements CanActivate {
 @Injectable({
   providedIn: 'root',
 })
+export class isDriverOrDistManagerGuard implements CanActivate {
+  constructor() { }
+  canActivate(
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      !!sessionStorage.getItem('dist-manager') || !!sessionStorage.getItem('driver') ? resolve(true) : reject();
+    });
+  }
+}
+
+@Injectable({
+  providedIn: 'root',
+})
 export class isDistManagerGuard implements CanActivate {
   constructor() {}
   canActivate(

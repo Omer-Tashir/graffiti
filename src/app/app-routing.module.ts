@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Router, RouterModule, Routes } from '@angular/router';
 
-import { isDistManagerGuard, isDistManagerOrManageGuard, isDriverGuard, isLoggedInGuard, isManagerGuard } from './services/auth.guard';
+import { isDistManagerGuard, isDistManagerOrManageGuard, isDriverGuard, isDriverOrDistManagerGuard, isLoggedInGuard, isManagerGuard } from './services/auth.guard';
 import { AuthService } from './services/auth.service';
 import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -52,7 +52,7 @@ const routes: Routes = [
       {
         path: 'driver-constraints',
         component: DriverConstraintsComponent,
-        canActivate: [isLoggedInGuard, isDriverGuard]
+        canActivate: [isLoggedInGuard, isDriverOrDistManagerGuard]
       },
       {
         path: 'drivers',

@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -23,7 +24,7 @@ import { DatabaseService } from 'src/app/services/database.service';
   styleUrls: ['./drivers.component.scss']
 })
 export class DriversComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['uid', 'displayName', 'email', 'phoneNumber', 'city', 'address', 'addressNumber', 'licenseType', 'workingStartDate', 'actions'];
+  displayedColumns: string[] = ['displayName', 'email', 'phoneNumber', 'city', 'address', 'addressNumber', 'licenseType', 'workingStartDate', 'actions'];
   dataSource!: MatTableDataSource<Driver>;
   form: FormGroup = new FormGroup({});
   resultsLength = 0;
@@ -64,6 +65,7 @@ export class DriversComponent implements OnInit, AfterViewInit {
   city: any;
 
   constructor(
+    public location: Location,
     public router: Router,
     public db: DatabaseService,
     public afAuth: AngularFireAuth,

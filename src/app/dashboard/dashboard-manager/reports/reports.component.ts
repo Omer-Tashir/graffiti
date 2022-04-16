@@ -1,4 +1,5 @@
 import { animate, animateChild, query, stagger, state, style, transition, trigger } from '@angular/animations';
+import { Location } from '@angular/common';
 import { AfterViewInit, Component, EventEmitter, HostBinding } from '@angular/core';
 
 @Component({
@@ -24,6 +25,7 @@ export class ReportsComponent implements AfterViewInit {
   refresh$: EventEmitter<void> = new EventEmitter<void>();
 
   constructor(
+    public location: Location,
   ) { }
 
   ngAfterViewInit(): void {

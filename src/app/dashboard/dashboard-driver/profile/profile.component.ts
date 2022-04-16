@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -51,7 +52,8 @@ export class ProfileComponent implements OnInit {
     public afAuth: AngularFireAuth,
     private alertService: AlertService,
     private sessionStorageService: SessionStorageService,
-    public globals: Globals
+    public globals: Globals,
+    public location: Location,
   ) {}
 
   hasError = (controlName: string, errorName: string) => {

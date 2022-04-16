@@ -20,6 +20,7 @@ import { SessionStorageService } from 'src/app/core/session-storage-service';
 import { DataDialogComponent } from 'src/app/core/data-dialog/data-dialog.component';
 import { Driver } from 'src/app/models/driver.interface';
 import { RunningInaly } from 'src/app/models/running-inlay.interface';
+import { Location } from '@angular/common';
 
 
 @Component({
@@ -42,7 +43,7 @@ export class OrdersTrackerComponent implements AfterViewInit, OnDestroy {
   ];
 
   private cities: any[] = [];
-  inlaysColumns: string[] = ['uid', 'date', 'driver', 'route', 'routeDetails', 'orders', 'actions'];
+  inlaysColumns: string[] = ['date', 'driver', 'route', 'routeDetails', 'orders', 'actions'];
   inlays: RunningInaly[] = [];
   loading: boolean = true;
 
@@ -54,6 +55,7 @@ export class OrdersTrackerComponent implements AfterViewInit, OnDestroy {
     private alertService: AlertService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
+    public location: Location,
   ) {
     this.db.getCitiesJSON().subscribe(data => {
       this.cities = data;
@@ -126,7 +128,7 @@ export class OrdersTrackerComponent implements AfterViewInit, OnDestroy {
       width: '700px',
       data: {
         order,
-        title: 'הזמנה: ' + order.uid,
+        title: 'הזמנה: ' + `${order.deliveryCity}, ${order.deliveryAddress} ${order.deliveryAddressNumber}`,
       },
     });
   }
@@ -160,6 +162,18 @@ export class OrdersTrackerComponent implements AfterViewInit, OnDestroy {
 
   getRouteTotalWeight(orders: Order[]): number {
     return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
+  }
+
+  getRouteTotalTime(orders: Order[]) {
+    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
+    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
+    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
+      let time = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance)  / 100;
+      time += ((5 / 60) * orders.length);
+      return time >= 1 ? `${Math.floor(time)} שעות, ${((time - Math.floor(time)) * 60).toFixed(0)} דקות` : `${(time * 60).toFixed(0)} דקות`;
+    }
+
+    return 'לא ידוע';
   }
 
   ngAfterViewInit(): void {
