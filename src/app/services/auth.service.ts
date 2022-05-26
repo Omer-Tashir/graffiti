@@ -51,7 +51,8 @@ export class AuthService {
                 sessionStorage.setItem('user', JSON.stringify(auth.user));
                 this.db.init().pipe(first()).subscribe(() => {
                     this.managers = JSON.parse(this.sessionStorageService.getItem('managers'));
-                    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+                    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+                        .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
                     this.distManagers = JSON.parse(this.sessionStorageService.getItem('dist-managers'));
                     let user: Manager | Driver | DistManager | undefined;
 

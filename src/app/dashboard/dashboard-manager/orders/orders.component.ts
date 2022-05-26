@@ -1,5 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -27,7 +27,7 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./orders.component.scss']
 })
 export class OrdersComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'distance', 'description', 'actions'];
+  displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'description', 'actions'];
   dataSource!: MatTableDataSource<Order>;
   form: FormGroup = new FormGroup({});
   resultsLength = 0;
@@ -72,12 +72,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     private datePipe: DatePipe,
     public globals: Globals,
     public location: Location,
+    public cdr: ChangeDetectorRef,
   ) { }
-  
-  getDistance(city: string) {
-    const c = this.cities.find(c => c.name === city);
-    return c?.marlog_distance ? `${c.marlog_distance} ק״מ` : 'לא ידוע';
-  }
 
   hasError = (controlName: string, errorName: string) => {
     return this.form?.controls[controlName].dirty && this.form?.controls[controlName].hasError(errorName);
@@ -88,18 +84,21 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     this.isNewRecord = true;
     this.form.reset();
     this.initForm({} as Order);
+    this.cdr.detectChanges();
   }
 
   submit = (formValue: any) => {
     if (this.form?.valid) {
       this.isLoading = true;
       this.putOrder(formValue);
+      this.cdr.detectChanges();
     }
   };
 
   edit(order: Order): void {
     this.isNewRecord = false;
     this.initForm(order);
+    this.cdr.detectChanges();
   }
 
   delete(order: Order): void {
@@ -121,6 +120,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
           .catch((error) => {
             console.log(error);
             this.alertService.httpError(error);
+            this.cdr.detectChanges();
           });
       }
     });
@@ -130,11 +130,13 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     this.alertService.ok(`הפעולה בוצעה בהצלחה`, `ההזמנה נמחקה מהמערכת`);
     this.orders = this.orders.filter(o => o.uid !== order.uid);
     this.initDatasource(this.orders);
+    this.cdr.detectChanges();
   }
 
   putOrder = (formValue: any) => {
     let order: Order = { ...formValue } as Order;
     order.uid = this.form.get('uid')?.value;
+    this.cdr.detectChanges();
 
     this.db
       .putOrder(order, this.isNewRecord)
@@ -149,19 +151,23 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         this.isNewRecord = true;
         this.form.reset();
         this.initForm({} as Order);
+        this.cdr.detectChanges();
       })
       .catch((error) => {
         console.log(error);
         this.alertService.httpError(error);
+        this.cdr.detectChanges();
       })
       .finally(() => {
         this.isLoading = false;
+        this.cdr.detectChanges();
       });
   };
 
   private getOrders() {
     this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
     this.initForm({} as Order);
+    this.cdr.detectChanges();
   }
 
   private initDatasource(data: Order[]): void {
@@ -172,17 +178,20 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
     this.sortData({ active: 'deliveryDate', direction: 'asc' });
+    this.cdr.detectChanges();
   }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.cdr.detectChanges();
   }
 
   sortData(sort: Sort) {
     const data = this.dataSource.data.slice();
     if (!sort.active || sort.direction === '') {
       this.dataSource.data = data;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -203,6 +212,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         default: return 0;
       }
     });
+
+    this.cdr.detectChanges();
   }
 
   private compare(a: number | string | boolean, b: number | string | boolean, isAsc: boolean) {
@@ -223,7 +234,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       deliveryCity: new FormControl(order?.deliveryCity, [Validators.required]),
       deliveryAddress: new FormControl(order?.deliveryAddress, [Validators.required]),
       deliveryAddressNumber: new FormControl(order?.deliveryAddressNumber),
-      orderStatus: new FormControl(order?.orderStatus, [Validators.required]),
+      orderStatus: new FormControl(order?.orderStatus ?? OrderStatus.PENDING, [Validators.required]),
       description: new FormControl(order?.description),
       important: new FormControl(order?.important),
     });
@@ -251,8 +262,12 @@ export class OrdersComponent implements OnInit, AfterViewInit {
             this.lishka = "-";
           }
         }
+
+        this.cdr.detectChanges();
       }
     );
+
+    this.cdr.detectChanges();
   }
 
   cityClick(event: any) {
@@ -326,7 +341,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
           deliveryCity: data[i]['עיר'] ?? '',
           deliveryAddress: data[i]['רחוב'] ?? '',
           deliveryAddressNumber: data[i]['מספר בית'] ?? '',
-          deliveryDate: moment(data[i]['תאריך אספקה'], "DD/MM/YYYY").toDate(),
+          deliveryDate: moment(data[i]['תאריך אספקה'], "DD/MM/YYYY").format("YYYY-MM-DD"),
           orderWeight: +data[i]['משקל הזמנה'] ?? '',
           orderStatus: OrderStatus.PENDING,
           important: data[i]['הזמנה דחופה?'] ? data[i]['הזמנה דחופה?'] == 'לא' ? false : true : false,
@@ -345,6 +360,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
           })
           .finally(() => {
             this.isLoading = false;
+            this.cdr.detectChanges();
           });
       }
 
@@ -357,6 +373,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       this.form.reset();
       this.initForm({} as Order);
     };
+
+    this.cdr.detectChanges();
   }
 
   ngOnInit(): void {
@@ -369,17 +387,20 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         let user = JSON.parse(temp);
         this.loggedInUserId = user?.uid;
         this.getOrders();
+        this.cdr.detectChanges();
       }
     } else {
       this.afAuth.authState.subscribe((auth) => {
         this.loggedInUserId = auth?.uid;
         this.getOrders();
+        this.cdr.detectChanges();
       });
     }
   }
 
   ngAfterViewInit(): void {
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+    this.cdr.detectChanges();
 
     merge(this.sort.sortChange, this.paginator.page)
       .pipe(
@@ -402,6 +423,7 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         })
       ).subscribe(data => {
         this.initDatasource(data);
+        this.cdr.detectChanges();
       });
   }
 }

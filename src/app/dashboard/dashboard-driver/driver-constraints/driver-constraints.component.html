@@ -32,8 +32,10 @@
             <p class="dates-picked">אילוצים קיימים:</p>
             <ul class="dates-picked-list">
                 <li *ngFor="let date of pickedArr | keyvalue: keyDescOrder">
-                    {{date.key | dateFormat}} {{date.value ? ' - הערות: ' + date.value : ''}}
-                    <mat-icon (click)="deleteDate(date.key)">delete</mat-icon>
+                    <ng-container *ngIf="date?.key">
+                        {{date.key | dateFormat}} {{date.value ? ' - הערות: ' + date.value : ''}}
+                        <mat-icon (click)="deleteDate(date.key)">delete</mat-icon>
+                    </ng-container>
                 </li>
             </ul>
         </div>

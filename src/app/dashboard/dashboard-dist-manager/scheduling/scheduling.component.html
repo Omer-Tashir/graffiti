@@ -1,7 +1,8 @@
 <button mat-raised-button class="back-btn" (click)="location.back()">חזור לתפריט</button>
 
-<h1 class="title">הזמנות שטרם סופקו
-    <button [disabled]="ordersTable.data.length === 0" class="fab-btn run-algorithem" mat-fab color="primary" matTooltip="הרץ אלגוריתם שיבוץ" (click)="runAlgorithem()">
+<h1 class="title">
+        הזמנות ממתינות לשיבוץ ({{ordersTable.data.length}})
+        <button [disabled]="ordersTable.data.length === 0" class="fab-btn run-algorithem" mat-fab color="primary" matTooltip="הרץ אלגוריתם שיבוץ" (click)="runAlgorithem()">
         <mat-icon>play_arrow</mat-icon>
     </button>
 </h1>
@@ -17,7 +18,8 @@
 </div>
 
 <div class="table-container table-container-warning">
-    <table mat-table [dataSource]="ordersTable" matSort matSortActive="deliveryDate" matSortDisableClear 
+    <table mat-table [dataSource]="ordersTable" matSort #matSort1="matSort" 
+        matSortActive="deliveryDate" matSortDisableClear 
         matSortDirection="asc">
 
         <ng-container matColumnDef="uid">
@@ -40,8 +42,10 @@
         <ng-container matColumnDef="deliveryDate">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
             <td mat-cell *matCellDef="let row">
-                {{getDay(row?.deliveryDate)}} {{row?.deliveryDate | dateFormat}}
-                <code class="d-date">({{getDeliveryDateStr(row?.deliveryDate)}})</code>
+                <ng-container *ngIf="row?.deliveryDate && getDay(row?.deliveryDate)">                   
+                    {{getDay(row?.deliveryDate)}} {{row?.deliveryDate | dateFormat}}
+                    <code class="d-date">({{getDeliveryDateStr(row?.deliveryDate)}})</code>
+                </ng-container>
             </td>
         </ng-container>
 
@@ -96,48 +100,150 @@
     </table>
 </div>
 
+<mat-checkbox class="unsupplied" [(ngModel)]="showHistoricUnsupplied">
+    <ng-container *ngIf="showHistoricUnsupplied">הסתר את כל ההזמנות שטרם סופקו</ng-container>
+    <ng-container *ngIf="!showHistoricUnsupplied">הצג את כל ההזמנות שטרם סופקו</ng-container>
+</mat-checkbox>
+
+<h1 class="title" *ngIf="showHistoricUnsupplied">כל ההזמנות שטרם סופקו ({{unsuppliedOrdersTable.data.length}})</h1>
+<table [class.hide]="!showHistoricUnsupplied" mat-table [dataSource]="unsuppliedOrdersTable" matSort #matSort2="matSort" 
+    matSortActive="deliveryDate" matSortDisableClear matSortDirection="asc">
+
+    <ng-container matColumnDef="uid">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מספר הזמנה</th>
+        <td mat-cell *matCellDef="let row">
+            <span class="link" (click)="showOrder(row)">{{row.uid}}</span>
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="name">שם לקוח</th>
+        <td mat-cell *matCellDef="let row">{{row?.name}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="phone">טלפון</th>
+        <td mat-cell *matCellDef="let row">{{row?.phone}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="deliveryDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
+        <td mat-cell *matCellDef="let row">
+            <ng-container *ngIf="row?.deliveryDate && getDay(row?.deliveryDate)">
+                {{getDay(row?.deliveryDate)}} {{row?.deliveryDate | dateFormat}}
+                <code class="d-date">({{getDeliveryDateStr(row?.deliveryDate)}})</code>
+            </ng-container>
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="orderWeight">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="orderWeight">משקל (טון)</th>
+        <td mat-cell *matCellDef="let row">{{row?.orderWeight}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="deliveryCity">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryCity">עיר</th>
+        <td mat-cell *matCellDef="let row">{{row?.deliveryCity}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="deliveryAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddress">רחוב</th>
+        <td mat-cell *matCellDef="let row">{{row?.deliveryAddress}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="deliveryAddressNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryAddressNumber">מספר בית</th>
+        <td mat-cell *matCellDef="let row">{{row?.deliveryAddressNumber}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="orderStatus">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="orderStatus">סטטוס</th>
+        <td mat-cell *matCellDef="let row">{{row?.orderStatus | enum: OrderStatus}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="important">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="important">הזמנה דחופה?</th>
+        <td mat-cell *matCellDef="let row">{{row?.important ? 'כן' : 'לא'}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="description">הערות</th>
+        <td mat-cell *matCellDef="let row">{{row?.description}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+            <div class="action-group">
+                <button class="fab-btn" mat-fab color="primary" matTooltip="מחק" (click)="removeOrder(row)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </div>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="orderColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: orderColumns;" [class.delay]="isOrderDelay(row)"></tr>
+</table>
+
+
 <h1 class="title">רשימת שיבוצים</h1>
 
 <div class="table-container">
-    <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
+    <table mat-table [dataSource]="inlaysTable" matSort #matSort3="matSort" 
+        matSortActive="name" matSortDisableClear matSortDirection="asc">
 
         <ng-container matColumnDef="uid">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="uid">מזהה שיבוץ</th>
+            <th mat-header-cell *matHeaderCellDef>מזהה שיבוץ</th>
             <td mat-cell *matCellDef="let row">{{row?.uid || 'שיבוץ חדש'}}</td>
         </ng-container>
 
         <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך האספקה שנקבע</th>
-            <td mat-cell *matCellDef="let row">{{getDay(row?.date)}} {{row?.date | dateFormat}}</td>
+            <td mat-cell *matCellDef="let row">
+                <ng-container *ngIf="row?.date && getDay(row?.date)">
+                    {{getDay(row.date)}} {{row.date | dateFormat}}
+                </ng-container>
+            </td>
         </ng-container>
 
         <ng-container matColumnDef="driver">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="driver">נהג</th>
+            <th mat-header-cell *matHeaderCellDef>נהג</th>
             <td mat-cell *matCellDef="let row">
-                <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+                <ng-container *ngIf="row.driver">
+                    <span class="link" (click)="showDriver(row.driver)">{{row.driver.displayName}}</span>
+                </ng-container>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="route">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="route">מסלול</th>
+            <th mat-header-cell *matHeaderCellDef>מסלול</th>
             <td mat-cell *matCellDef="let row">
-                <span class="link" (click)="showRoute(row.route)">{{row.route.name}}</span>
+                <ng-container *ngIf="row.route">
+                    <span class="link" (click)="showRoute(row.route)">{{row.route.name}}</span>
+                </ng-container>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="routeDetails">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="routeDetails">תיאור המסלול</th>
+            <th mat-header-cell *matHeaderCellDef>תיאור המסלול</th>
             <td mat-cell *matCellDef="let row">
-                <p class="route-details-draw">{{getRouteDraw(row.orders)}}</p>
-                <span class="route-details-length">אורך המסלול: {{getRouteDistance(row.orders)}}</span>
-                <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
-                <span class="route-details-length">משקל כולל: {{getRouteTotalWeight(row.orders)}} טון</span>
-                <span class="route-details-length">זמן משוער: {{getRouteTotalTime(row.orders)}}</span>
+                <ng-container *ngIf="row.orders">
+                    <p class="route-details-draw">
+                        {{getRouteDraw(row.orders)}}
+                        <br>
+                        <code *ngIf="row.tip">נסיעה דרך: {{row.tip}}</code>
+                    </p>
+                    <span class="route-details-length">אורך המסלול: {{row.distance}}</span>
+                    <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
+                    <span class="route-details-length">משקל כולל: {{getRouteTotalWeight(row.orders)}} טון</span>
+                    <span class="route-details-length">זמן משוער: {{row.duration}}</span>
+                </ng-container>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="orders">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="orders">רשימת הזמנות</th>
+            <th mat-header-cell *matHeaderCellDef>רשימת הזמנות</th>
             <td mat-cell *matCellDef="let row">
                 <ul>
                     <li *ngFor="let order of row.orders">

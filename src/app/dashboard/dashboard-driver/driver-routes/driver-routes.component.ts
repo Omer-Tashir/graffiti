@@ -91,36 +91,12 @@ export class DriverRoutesComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   getRouteDraw(orders: Order[]): string {
-    const o = [{ deliveryCity: 'מרלוג' } as Order, ...orders];
-    return o.map(o => o.deliveryCity).join(' -> ');
-  }
-
-  getRouteDistance(orders: Order[]): string {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      const km = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance);
-      return `${km}km`;
-    }
-    else {
-      return ``;
-    }
+    const o = [{ deliveryAddress: 'מרלוג', deliveryAddressNumber: '' } as Order, ...orders];
+    return o.map(o => `${o.deliveryAddress} ${o.deliveryAddressNumber}`.trim()).join(' -> ').concat(' -> מרלוג');
   }
 
   getRouteTotalWeight(orders: Order[]): number {
     return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
-  }
-
-  getRouteTotalTime(orders: Order[]) {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      let time = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance)  / 100;
-      time += ((5 / 60) * orders.length);
-      return time >= 1 ? `${Math.floor(time)} שעות, ${((time - Math.floor(time)) * 60).toFixed(0)} דקות` : `${(time * 60).toFixed(0)} דקות`;
-    }
-
-    return 'לא ידוע';
   }
 
   ngOnInit(): void {
@@ -131,7 +107,7 @@ export class DriverRoutesComponent implements AfterViewInit, OnDestroy, OnInit {
     this.loadingSubscription = this.isLoading.subscribe();
     const driver: Driver = JSON.parse(this.sessionStorageService.getItem('user'));
     this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));
-    this.inlays = this.inlays.filter((i: RunningInaly) => i.driver.uid === driver.uid);
+    this.inlays = this.inlays.filter((i: RunningInaly) => i.driver?.uid === driver.uid);
 
     if (this.type === 'history') {
       this.inlays = this.inlays.filter((i: RunningInaly) => moment(i.date).isBefore(new Date));

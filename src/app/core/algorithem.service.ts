@@ -1,25 +1,23 @@
 import { Injectable } from '@angular/core';
 import { Globals } from '../app.globals';
-import { Inlay } from '../models/inlay.interfcae';
 import { Order } from '../models/order.interface';
+import { Loader } from '@googlemaps/js-api-loader';
 import { SessionStorageService } from './session-storage-service';
 
 import * as moment from "moment/moment";
 
 import { Route } from '../models/route.interface';
 import { OrderStatus } from '../models/order-status.enum';
-import { DatabaseService } from '../services/database.service';
 import { Driver } from '../models/driver.interface';
 import { DriverConstraint } from '../models/driver-constraint';
 import { LicenseType } from '../models/license-type.enum';
 import { RunningInaly } from '../models/running-inlay.interface';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlgorithemService {
-  private readonly IMPORTANT_SCORE = Number.MAX_SAFE_INTEGER;
-  private cities: any[] = [];
   private days: string[] = [
     'ראשון',
     'שני',
@@ -32,107 +30,81 @@ export class AlgorithemService {
 
   constructor(
     public globals: Globals,
-    private db: DatabaseService,
     private sessionStorageService: SessionStorageService,
-  ) {
-    this.db.getCitiesJSON().subscribe(data => {
-      this.cities = data;
-    });
-  }
+  ) { }
 
-  run(orders: Order[]): RunningInaly[] {
-    let inlays: Inlay[] = [];
+  async run(orders: Order[]): Promise<RunningInaly[]> {
     let runningInalys: RunningInaly[] = [];
 
     const drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
     const routes = JSON.parse(this.sessionStorageService.getItem('routes'));
     
-    // שלב מקדים - סידור לפי חשיבות הזמנה
-    orders.sort(function(x, y) {
-        // true values first
-        return (x.important === y.important) ? 0 : x.important ? -1 : 1;
-        // false values first
-        // return (x.important === y.important) ? 0 : x.important ? 1 : -1;
-    });
-    
     // שלב א׳ - מסלולים קבועים בימים קבועים
-    for (let d = 0; d < this.days.length; d++) {
-      let dailyRoutes: Route[] = routes.filter((r: Route) => r.distributionDays.includes(this.days[d]));
+    for (let d = new Date().getDay(); d < this.days.length; d++) {
+      let dailyRoutes: Route[] = routes
+        .filter((r: Route) => r.distributionDays.includes(this.days[d]));
+      
       let dailyOrders: Order[] = orders
         .filter(o => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
         .filter(o => this.days[moment(o.deliveryDate).toDate().getDay()] === this.days[d]);
       
-      for (let i = 0; i < dailyOrders.length; i++) {
-        let order = dailyOrders[i];
-        let dailyRoute = dailyRoutes
-          .find(d => d.distributionAreas.includes(this.getLishkaByCity(order.deliveryCity)));
-          
-        if (dailyRoute) {
-          let date = this.getAvailableDateForOrder(dailyRoute);
-          let driver = drivers
-            .filter((d: Driver) => !!this.isDriverAvailable(d, date) && d.licenseType === dailyRoute?.licenseType)
-            .find((d: Driver) => d.licenseType === dailyRoute?.licenseType);
-          
-          if (order && driver) {
-            inlays.push({
-              uid: this.globals.randomAlphaNumeric(20),
-              date: date,
-              orderDate: order.deliveryDate,
-              route: dailyRoute,
-              order: order,
-              driver: driver
-            } as Inlay);
-  
-            // שינוי סטטוס הזמנה לשובצה
-            order.orderStatus = OrderStatus.INLAY;
-          }
-        }
+      // דילוג על ימים שבהם אין הזמנות
+      if (dailyOrders.length === 0) {
+        continue;
       }
-    }
-
-    // שלב ב׳ - בדיקת חריגות משקל ומסלול
-
-    // קיבוץ לפי מסלול, נהג ותאריך זהים
-    var runningInalysObj: object = inlays.reduce(function (r, a) {
-      const uid = `${a.date}-${a.driver.uid}-${a.route.uid}`;
-        r[uid] = r[uid] || [];
-        r[uid].push(a);
-        return r;
-    }, Object.create(null));
-
-    // סידור נקודות ההפצה לפי מרחקים
-    for (let [key, inlays] of Object.entries(runningInalysObj)) {
-      this.sortByDistances(runningInalysObj, key);
-    }
-
-    for (let [key, inlays] of Object.entries(runningInalysObj)) {
-      const driver: Driver = inlays[0].driver;
       
-      // בדיקה אם יש חריגת משקל וביצוע איזון
-      while (this.isOverweight(inlays, driver)) {
-        const inlay: Inlay = inlays.find((i: Inlay) => this.isOverweight([i], driver)); // בדיקה אולי יש הזמנה בודדת שחורגת מהמשקל הכולל
-        if (inlay) {
-          inlays = inlays.filter((i: Inlay) => i.uid !== inlay.uid);
+      let dailyRoutesDriver = dailyRoutes.map((dr: Route) => {
+        const availableDrivers = drivers
+          .filter((driver: Driver) => driver.licenseType == dr.licenseType)
+          .filter((driver: Driver) => this.isDriverAvailable(driver, moment().startOf('week').add('days', d).toDate()));
+        
+        return {
+          route: dr,
+          driver: availableDrivers[Math.floor(Math.random() * availableDrivers.length)] // random driver
+        };
+      }).filter(res => !!res.driver);
+
+      const areas = dailyOrders.map((o: Order) => o.deliveryCity);
+      const selectedDailyRouteDriver = dailyRoutesDriver
+        .find(drd => drd.route.distributionAreas
+          .some((area: string) => areas.includes(area)));
+      
+      if (selectedDailyRouteDriver) {
+        // sort orders by weight
+        dailyOrders = dailyOrders.sort((o1, o2) => o1.orderWeight - o2.orderWeight);
+
+        // remove orders until weight is ok
+        while (this.isOverweight(dailyOrders, selectedDailyRouteDriver.driver)) {
+          dailyOrders.pop();
         }
-        else {
-          inlays.pop(); // מחיקת האחרונה
+      
+        if (dailyOrders?.length) {
+          // סימון כשובץ
+          dailyOrders.forEach(order => {
+            order.orderStatus = OrderStatus.INLAY;
+          });
+
+          // ביצוע אלגוריתם לקבלת מסלול אופטימלי בין נקודות
+          const res = await this.getOptimizedRoute(dailyOrders, selectedDailyRouteDriver.driver, selectedDailyRouteDriver.route);
+
+          runningInalys.push({
+            date: moment().startOf('week').add('days', d).toDate(),
+            driver: selectedDailyRouteDriver.driver,
+            route: selectedDailyRouteDriver.route,
+            distance: res.distance ?? '',
+            duration: res.duration ?? '',
+            orders: res.sorted,
+            tip: res.tip ?? '',
+          } as RunningInaly);
         }
       }
-
-      runningInalys.push({
-        date: inlays[0].date,
-        driver: inlays[0].driver,
-        route: inlays[0].route,
-        orders: inlays.map((i: Inlay) => i.order)
-      } as RunningInaly);
     }
 
-    console.log(runningInalys);
     return runningInalys;
   }
 
-  private isOverweight(inlays: Inlay[], driver: Driver): boolean {
-    const totalWeight: number = inlays?.reduce((p: number, c: Inlay) => p + c.order.orderWeight, 0) ?? 0;
+  private isOverweight(orders: Order[], driver: Driver): boolean {
+    const totalWeight: number = orders?.reduce((p: number, o: Order) => p + o.orderWeight, 0) ?? 0;
     
     if (driver.licenseType === LicenseType.TON3 && totalWeight > 3) {
       return true;
@@ -150,33 +122,53 @@ export class AlgorithemService {
     return false;
   }
 
-  private sortByDistances(runningInalys: any, key: string) {
-    return runningInalys[key].sort((i1: Inlay, i2: Inlay) =>
-      (+this.cities.find((c: any) => c.name === i1.order.deliveryCity)?.marlog_distance) -
-      (+this.cities.find((c: any) => c.name === i2.order.deliveryCity)?.marlog_distance));
-  }
-
-  private getAvailableDateForOrder(route: Route): Date {
-    let today = new Date();
-    const routeDeliveryDays = route.distributionDays.map(d=>this.days.indexOf(d)).sort();
-    const thisWeekPossibleDay = routeDeliveryDays.find(d => d >= today.getDay());
-    
-    if (thisWeekPossibleDay) {
-      return moment().day(thisWeekPossibleDay).toDate();
-    }
-    else {
-      return moment().add(1, 'weeks').startOf('week').add(Math.min(...routeDeliveryDays), 'days').toDate();
-    }
-  }
-
   private isDriverAvailable(driver: Driver, date: Date): boolean {
     let driverConstraints: DriverConstraint[] = JSON.parse(this.sessionStorageService.getItem('driver-constraints'));
-    driverConstraints = driverConstraints.filter(c => c.driver === driver.uid);
+    driverConstraints = driverConstraints.filter(c => c.driver === driver.uid || c.driver.uid === driver.uid);
     return !driverConstraints.find(c => moment(c.date).isSame(date, 'day'));
   }
 
-  private getLishkaByCity(city: string): any {
-    const c = this.cities.find((c: any) => c.name === city);
-    return c ? c['lishka'] : '';
+  async getOptimizedRoute(orders: Order[], driver: Driver, route: Route) {
+    const loader = new Loader({
+        apiKey: environment.googleApiKey,
+        version: "weekly",
+        libraries: ["places"]
+    });
+
+    let google = await loader.load();
+    const directionsService = new google.maps.DirectionsService;
+    const response = await directionsService.route({
+      origin: "עמק האלה 250 מודיעין", // marlog
+      destination: "עמק האלה 250 מודיעין", // marlog
+      waypoints: orders.map(order => {
+        return {
+          stopover: true,
+          location: `${order.deliveryAddress} ${order.deliveryAddressNumber} ${order.deliveryCity}`
+        }
+      }),
+      optimizeWaypoints: true,
+      travelMode: google.maps.TravelMode.DRIVING
+    });
+
+    const breakPointTime = 15 * 60;
+    const optimizedRoute = response;
+
+    let totalTime = 0;
+    let totalDistance = 0;
+
+    for (let i = 0; i < optimizedRoute.routes[0]['legs'].length; i++) {
+      const leg = optimizedRoute.routes[0]['legs'][i];
+      if (leg?.duration && leg.distance?.value) {
+        totalTime += breakPointTime + leg.duration?.value;
+        totalDistance += leg.distance?.value;
+      }
+    }
+
+    return {
+      duration: new Date(totalTime * 1000).toISOString().substr(11, 8),
+      distance: `${totalDistance / 1000} ק״מ`,
+      sorted: response.routes[0].waypoint_order.map((i: number) => orders[i]),
+      tip: response.routes[0].summary
+    }
   }
 }

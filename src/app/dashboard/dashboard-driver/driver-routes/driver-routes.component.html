@@ -12,7 +12,11 @@
 
         <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="date">תאריך האספקה שנקבע</th>
-            <td mat-cell *matCellDef="let row">{{getDay(row?.date)}} {{row?.date | dateFormat}}</td>
+            <td mat-cell *matCellDef="let row">
+                <ng-container *ngIf="row?.date && getDay(row?.date)">
+                    {{getDay(row?.date)}} {{row?.date | dateFormat}}
+                </ng-container>
+            </td>
         </ng-container>
 
         <ng-container matColumnDef="route">
@@ -25,11 +29,17 @@
         <ng-container matColumnDef="routeDetails">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="routeDetails">תיאור המסלול</th>
             <td mat-cell *matCellDef="let row">
-                <p class="route-details-draw">{{getRouteDraw(row.orders)}}</p>
-                <span class="route-details-length">אורך המסלול: {{getRouteDistance(row.orders)}}</span>
-                <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
-                <span class="route-details-length">משקל כולל: {{getRouteTotalWeight(row.orders)}} טון</span>
-                <span class="route-details-length">זמן משוער: {{getRouteTotalTime(row.orders)}}</span>
+                <ng-container *ngIf="row.orders">
+                    <p class="route-details-draw">
+                        {{getRouteDraw(row.orders)}}
+                        <br>
+                        <code *ngIf="row.tip">נסיעה דרך: {{row.tip}}</code>
+                    </p>
+                    <span class="route-details-length">אורך המסלול: {{row.distance}}</span>
+                    <span class="route-details-length">מספר נקודות פריקה: {{row.orders.length}}</span>
+                    <span class="route-details-length">משקל כולל: {{getRouteTotalWeight(row.orders)}} טון</span>
+                    <span class="route-details-length">זמן משוער: {{row.duration}}</span>
+                </ng-container>
             </td>
         </ng-container>
 

@@ -2,7 +2,7 @@ import { Driver } from "./driver.interface";
 
 export class DriverConstraint {
   id!: any;
-  driver!: Driver | undefined;
+  driver!: any;
   date!: any;
   comment!: string;
 }

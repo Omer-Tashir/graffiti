@@ -7,5 +7,6 @@ export const environment = {
     storageBucket: "graffiti-project-afeka.appspot.com",
     messagingSenderId: "691379601792",
     appId: "1:691379601792:web:cace310508a7cb5fe08165"
-  }
+  },
+  googleApiKey: 'AIzaSyDob3i02a5OV_nxDcsHzAjstmReeVGFd7A'
 };

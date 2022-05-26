@@ -1,4 +1,4 @@
-import { Location } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ChangeDetectorRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { ChartOptions, ChartType } from 'chart.js';
@@ -17,10 +17,13 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { AlertService } from 'src/app/core/alerts/alert.service';
 import { DatabaseService } from 'src/app/services/database.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest, merge } from 'rxjs';
 
 import * as moment from 'moment/moment';
 import * as XLSX from 'xlsx'; 
+import { FormControl } from '@angular/forms';
+import { Sort } from '@angular/material/sort';
+import { startWith, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'dashboard-counters',
@@ -31,6 +34,11 @@ import * as XLSX from 'xlsx';
 export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDestroy {
   public isLoading: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
   public loadingSubscription: any;
+
+  driversCtrl = new FormControl();
+  displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'description'];
+  dataSource!: MatTableDataSource<Order>;
+  OrderStatus = OrderStatus;
 
   days: string[] = [
     'ראשון',
@@ -46,6 +54,9 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   inlaysColumns: string[] = ['date', 'driver', 'route', 'routeDetails', 'orders'];
   loading: boolean = true;
 
+  fromDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
+  toDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
+
   inlaysTable: MatTableDataSource<RunningInaly> = new MatTableDataSource<RunningInaly>([]);
 
   constructor(
@@ -54,13 +65,72 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
     public afAuth: AngularFireAuth,
     public globals: Globals,
     private db: DatabaseService,
+    private datePipe: DatePipe,
     private alertService: AlertService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
   ) {
     this.db.getCitiesJSON().subscribe(data => {
       this.cities = data;
+      this.cdr.detectChanges();
     });
+  }
+
+  private getOrders() {
+    this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
+    this.cdr.detectChanges();
+  }
+
+  private initDatasource(data: Order[]): void {
+    this.dataSource = new MatTableDataSource(data);
+    this.dataSource.filterPredicate = (order: Order, filter: string) => {
+      return JSON.stringify(order).indexOf(filter) != -1
+    };
+    this.sortData({ active: 'deliveryDate', direction: 'asc' });
+    this.cdr.detectChanges();
+  }
+
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.cdr.detectChanges();
+  }
+
+  sortData(sort: Sort) {
+    const data = this.dataSource.data.slice();
+    if (!sort.active || sort.direction === '') {
+      this.dataSource.data = data;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.dataSource.data = data.sort((a: Order, b: Order) => {
+      const isAsc = sort.direction === 'asc';
+      switch (sort.active) {
+        case 'uid': return this.compare(a.uid, b.uid, isAsc);
+        case 'name': return this.compare(a.name, b.name, isAsc);
+        case 'phone': return this.compare(a.phone, b.phone, isAsc);
+        case 'deliveryCity': return this.compare(a.deliveryCity, b.deliveryCity, isAsc);
+        case 'deliveryAddress': return this.compare(a.deliveryAddress, b.deliveryAddress, isAsc);
+        case 'deliveryAddressNumber': return this.compare(a.deliveryAddressNumber, b.deliveryAddressNumber, isAsc);
+        case 'orderWeight': return this.compare(a.orderWeight, b.orderWeight, isAsc);
+        case 'orderStatus': return this.compare(a.orderStatus, b.orderStatus, isAsc);
+        case 'important': return this.compare(a.important, b.important, isAsc);
+        case 'description': return this.compare(a.description, b.description, isAsc);
+        case 'deliveryDate': return this.compare(a.deliveryDate, b.deliveryDate, isAsc);
+        default: return 0;
+      }
+    });
+
+    this.cdr.detectChanges();
+  }
+
+  private compare(a: number | string | boolean, b: number | string | boolean, isAsc: boolean) {
+    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+  }
+
+  track(index: any, order: Order) {
+    return order?.uid;
   }
 
   getDay(deliveryDate: string): string {
@@ -69,6 +139,7 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
 
   private setInlays() {
     this.inlaysTable = new MatTableDataSource<RunningInaly>(this.inlays);
+    this.cdr.detectChanges();
   }
 
   showRoute(route: Route) {
@@ -102,36 +173,12 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   }
 
   getRouteDraw(orders: Order[]): string {
-    const o = [{ deliveryCity: 'מרלוג' } as Order, ...orders];
-    return o.map(o => o.deliveryCity).join(' -> ');
-  }
-
-  getRouteDistance(orders: Order[]): string {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      const km = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance);
-      return `${km}km`;
-    }
-    else {
-      return ``;
-    }
+    const o = [{ deliveryAddress: 'מרלוג', deliveryAddressNumber: '' } as Order, ...orders];
+    return o.map(o => `${o.deliveryAddress} ${o.deliveryAddressNumber}`.trim()).join(' -> ').concat(' -> מרלוג');
   }
 
   getRouteTotalWeight(orders: Order[]): number {
     return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
-  }
-
-  getRouteTotalTime(orders: Order[]) {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      let time = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance)  / 100;
-      time += ((5 / 60) * orders.length);
-      return time >= 1 ? `${Math.floor(time)} שעות, ${((time - Math.floor(time)) * 60).toFixed(0)} דקות` : `${(time * 60).toFixed(0)} דקות`;
-    }
-
-    return 'לא ידוע';
   }
 
   ngAfterViewInit(): void {
@@ -242,8 +289,8 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
 
   getData(): void {
     this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));
-    this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
-    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
     this.routes = JSON.parse(this.sessionStorageService.getItem('routes'));
     this.driverConstraints = JSON.parse(this.sessionStorageService.getItem('driver-constraints'));
 
@@ -292,10 +339,13 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
         this.height = 160;
       };
     };
+
+    this.cdr.detectChanges();
   }
 
   ngOnInit(): void {
     this.today = moment().format('LLLL');
+    this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
 
     // Look for logged in user first
     if (sessionStorage.getItem('user') != null) {
@@ -304,13 +354,25 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
         let user = JSON.parse(temp);
         this.loggedInUserId = user?.uid;
         this.getData();
+        this.getOrders();
       }
     } else {
       this.afAuth.authState.subscribe((auth) => {
         this.loggedInUserId = auth?.uid;
         this.getData();
+        this.getOrders();
       });
     }
+
+    combineLatest([
+      this.fromDeliveryDate.valueChanges.pipe(startWith(this.fromDeliveryDate.value)),
+      this.toDeliveryDate.valueChanges.pipe(startWith(this.toDeliveryDate.value))
+    ]).pipe(
+      tap(() => this.initDatasource(this.orders
+        .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))))
+    ).subscribe();
+
+    this.cdr.detectChanges();
   }
 
   export() {

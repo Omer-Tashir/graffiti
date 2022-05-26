@@ -4,4 +4,7 @@ export interface RunningInaly {
     driver: any;
     route: any;
     orders: any;
+    distance: string;
+    duration: string;
+    tip: string;
 }

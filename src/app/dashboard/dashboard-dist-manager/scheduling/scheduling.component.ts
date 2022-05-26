@@ -3,15 +3,13 @@ import {
   AfterViewInit,
   ViewChild,
   ChangeDetectorRef,
-  ChangeDetectionStrategy,
   OnDestroy,
 } from '@angular/core';
 
-import { forkJoin, BehaviorSubject, merge, combineLatest, EMPTY } from 'rxjs';
+import { forkJoin, BehaviorSubject, combineLatest, EMPTY } from 'rxjs';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { FormControl, Validators } from '@angular/forms';
-import { MatSort, Sort } from '@angular/material/sort';
+import { FormControl } from '@angular/forms';
+import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
@@ -53,6 +51,10 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     'שבת'
   ];
 
+  @ViewChild('matSort1') matSort1!: MatSort;
+  @ViewChild('matSort2') matSort2!: MatSort;
+  @ViewChild('matSort3') matSort3!: MatSort;
+
   private cities: any[] = [];
   existDisplayedColumns: string[] = [];
   orderColumns: string[] = ['name', 'phone', 'deliveryDate', 'orderWeight', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'orderStatus', 'important', 'description', 'actions'];
@@ -61,14 +63,17 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
 
   OrderStatus = OrderStatus;
   orders: Order[] = [];
+  unsuppliedOrders: Order[] = [];
   originalOrders: Order[] = [];
   inlays: RunningInaly[] = [];
   loading: boolean = true;
 
+  showHistoricUnsupplied: boolean = false;
   fromDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
   toDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
 
   ordersTable: MatTableDataSource<Order> = new MatTableDataSource<Order>([]);
+  unsuppliedOrdersTable: MatTableDataSource<Order> = new MatTableDataSource<Order>([]);
   inlaysTable: MatTableDataSource<RunningInaly> = new MatTableDataSource<RunningInaly>([]);
 
   constructor(
@@ -179,11 +184,19 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
       .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
       .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
     
+    this.unsuppliedOrders = this.originalOrders
+      .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus));
+    
     this.ordersTable = new MatTableDataSource<Order>(this.orders);
+    this.unsuppliedOrdersTable = new MatTableDataSource<Order>(this.unsuppliedOrders);
+
+    this.ordersTable.sort = this.matSort1;
+    this.unsuppliedOrdersTable.sort = this.matSort2;
   }
 
   private setInlays() {
     this.inlaysTable = new MatTableDataSource<RunningInaly>(this.inlays);
+    this.inlaysTable.sort = this.matSort3;
   }
 
   private afterRemoveOrder(order: Order) {
@@ -240,20 +253,22 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
   }
 
   runAlgorithem(): void {
-    const run = this.algorithemService.run(this.orders);
-    if (run?.length) {
-      if (!this.inlays) {
-        this.inlays = [];
+    this.algorithemService.run(this.orders).then(res => {
+      console.log(res);
+      if (res?.length) {
+        if (!this.inlays) {
+          this.inlays = [];
+        }
+        
+        this.inlays = [...this.inlays, ...res].sort((a, b) => a.date - b.date);
+        this.setOrders();
+        this.setInlays();
+        this.cdr.detectChanges();
       }
-      
-      this.inlays = [...this.inlays, ...run].sort((a, b) => a.date - b.date);
-      this.setOrders();
-      this.setInlays();
-      this.cdr.detectChanges();
-    }
-    else {
-        this.alertService.ok(`האלגוריתם הורץ בהצלחה`, `לא נמצאו שיבוצים אפשריים עבור טווח התאריכים`);
-    }
+      else {
+          this.alertService.ok(`האלגוריתם הורץ בהצלחה`, `לא נמצאו שיבוצים אפשריים עבור טווח התאריכים`);
+      }
+    });
   }
 
   inlaysAgree(): void {
@@ -280,36 +295,12 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
   }
 
   getRouteDraw(orders: Order[]): string {
-    const o = [{ deliveryCity: 'מרלוג' } as Order, ...orders];
-    return o.map(o => o.deliveryCity).join(' -> ');
-  }
-
-  getRouteDistance(orders: Order[]): string {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      const km = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance);
-      return `${km}km`;
-    }
-    else {
-      return ``;
-    }
+    const o = [{ deliveryAddress: 'מרלוג', deliveryAddressNumber: '' } as Order, ...orders];
+    return o.map(o => `${o.deliveryAddress} ${o.deliveryAddressNumber}`.trim()).join(' -> ').concat(' -> מרלוג');
   }
 
   getRouteTotalWeight(orders: Order[]): number {
     return +orders.reduce((p, c) => p + c.orderWeight, 0).toFixed(2);
-  }
-
-  getRouteTotalTime(orders: Order[]) {
-    const firstCity = this.cities.find(c => c.name === orders[0].deliveryCity);
-    const lastCity = this.cities.find(c => c.name === orders[orders.length - 1].deliveryCity);
-    if (firstCity?.marlog_distance && lastCity?.marlog_distance) {
-      let time = Math.round(Math.abs(+lastCity.marlog_distance - +firstCity.marlog_distance) + +firstCity.marlog_distance) / 100;
-      time += ((5 / 60) * orders.length);
-      return time >= 1 ? `${Math.floor(time)} שעות, ${((time - Math.floor(time)) * 60).toFixed(0)} דקות` : `${(time * 60).toFixed(0)} דקות`;
-    }
-
-    return 'לא ידוע';
   }
 
   ngAfterViewInit(): void {
@@ -322,9 +313,12 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     this.originalOrders = JSON.parse(this.sessionStorageService.getItem('orders'));
     this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));
 
-    this.orders = this.orders.map(order => {
-      order.important = order.important || this.getDeliveryDateStr(order.deliveryDate) === 'ההזמנה באיחור';
-      return order;
+    this.orders = this.orders
+      .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
+      .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
+      .map(order => {
+        order.important = order.important || this.getDeliveryDateStr(order.deliveryDate) === 'ההזמנה באיחור';
+        return order;
     });
 
     this.originalOrders = this.originalOrders.map(order => {

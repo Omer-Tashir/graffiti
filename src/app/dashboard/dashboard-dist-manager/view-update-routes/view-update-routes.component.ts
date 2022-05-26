@@ -212,6 +212,7 @@ export class ViewUpdateRoutesComponent implements OnInit, AfterViewInit {
 
     this.db.getCitiesJSON().subscribe(data => {
       this.distributionAreas = Array.from(new Set(data.map((d: any) => d.lishka).sort().filter(Boolean)));
+      this.distributionAreas.push('תל אביב - יפו');
     });
   }
 

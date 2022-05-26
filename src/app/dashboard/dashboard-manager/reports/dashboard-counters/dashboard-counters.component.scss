@@ -214,5 +214,13 @@ h3 {
 }
 
 .export {
-    margin-top: 50px;
+        margin-bottom: 100px;
+}
+
+.date-filters {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 30px;
+    font-size: 14px;
 }

@@ -125,3 +125,15 @@ tr.delay {
       line-height: 0;
     }
 }
+
+.unsupplied {
+width: 100%;
+    display: flex;
+    font-size: 16px;
+    justify-content: center;
+    margin: 50px 0;
+}
+
+.hide {
+  display: none;
+}

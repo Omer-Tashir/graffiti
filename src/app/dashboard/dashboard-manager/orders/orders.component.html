@@ -59,7 +59,11 @@
 
             <ng-container matColumnDef="deliveryDate">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header="deliveryDate">תאריך אספקה</th>
-                <td mat-cell *matCellDef="let row">{{row.deliveryDate | dateFormat}}</td>
+                <td mat-cell *matCellDef="let row">
+                    <ng-container *ngIf="row?.deliveryDate">
+                        {{row.deliveryDate | dateFormat}}
+                    </ng-container>
+                </td>
             </ng-container>
 
             <ng-container matColumnDef="orderWeight">
@@ -75,11 +79,6 @@
             <ng-container matColumnDef="important">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header="important">הזמנה דחופה?</th>
                 <td mat-cell *matCellDef="let row">{{row.important ? 'כן' : 'לא'}}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="distance">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header="distance">מרחק יעד ההזמנה מהמרלוג</th>
-                <td mat-cell *matCellDef="let row">{{getDistance(row.deliveryCity)}}</td>
             </ng-container>
 
             <ng-container matColumnDef="description">

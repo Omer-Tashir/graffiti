@@ -61,7 +61,11 @@
     
             <ng-container matColumnDef="workingStartDate">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header="workingStartDate">תאריך התחלת עבודה</th>
-                <td mat-cell *matCellDef="let row">{{row.workingStartDate | dateFormat}}</td>
+                <td mat-cell *matCellDef="let row">
+                    <ng-container *ngIf="row?.workingStartDate">
+                        {{row.workingStartDate | dateFormat}}
+                    </ng-container>
+                </td>
             </ng-container>
 
             <ng-container matColumnDef="actions">

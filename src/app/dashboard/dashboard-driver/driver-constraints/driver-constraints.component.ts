@@ -144,7 +144,8 @@ export class DriverConstraintsComponent implements OnInit {
   ngOnInit(): void {
     this.minDate = moment().add(2, 'day').toDate();
     this.distManager = sessionStorage.getItem('dist-manager');
-    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
 
     if (sessionStorage.getItem('user') != null) {
       let temp = sessionStorage.getItem('user');

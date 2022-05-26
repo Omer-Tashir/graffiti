@@ -80,7 +80,9 @@ export class DriversComponent implements OnInit, AfterViewInit {
   };
 
   reset(): void {
-    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
+    
     this.isNewRecord = true;
     this.form.reset();
     this.initForm({} as Driver);
@@ -135,7 +137,8 @@ export class DriversComponent implements OnInit, AfterViewInit {
     this.db
       .putDriver(driver, this.isNewRecord)
       .then(() => {
-        this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+        this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+          .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
         this.initDatasource(this.drivers);
         this.alertService.ok(
           'הפועלה בוצעה בהצלחה',
@@ -156,7 +159,8 @@ export class DriversComponent implements OnInit, AfterViewInit {
   };
 
   private getDrivers() {
-    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
     this.initForm({} as Driver);
   }
 

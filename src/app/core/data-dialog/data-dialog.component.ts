@@ -36,6 +36,7 @@ export class DataDialogComponent {
   ) {
     this.db.getCitiesJSON().subscribe(data => {
       this.distributionAreas = Array.from(new Set(data.map((d: any) => d.lishka).sort().filter(Boolean)));
+      this.distributionAreas.push('תל אביב - יפו');
     });
     
     if (data?.order) {      
