@@ -80,7 +80,6 @@ export class AlgorithemService {
         selectedDailyRouteDriver.orders = selectedDailyRouteDriver.orders
           .sort((o1: Order, o2: Order) => o1.orderWeight - o2.orderWeight)
           .sort((o1: Order, o2: Order) => Number(o2.important) - Number(o1.important))
-        console.log(selectedDailyRouteDriver);
 
         // remove orders until weight is ok
         while (this.isOverweight(selectedDailyRouteDriver.orders, selectedDailyRouteDriver.driver)) {
