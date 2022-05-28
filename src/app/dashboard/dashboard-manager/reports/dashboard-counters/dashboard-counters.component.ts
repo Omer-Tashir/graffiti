@@ -35,8 +35,8 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   public isLoading: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
   public loadingSubscription: any;
 
-  driversCtrl = new FormControl();
-  driversReportCtrl = new FormControl();
+  driversCtrl = new FormControl([]);
+  routesCtrl = new FormControl([]);
   displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'description'];
   dataSource!: MatTableDataSource<Order>;
   OrderStatus = OrderStatus;
@@ -58,9 +58,6 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   fromDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
   toDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
 
-  fromDeliveryDateReport = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
-  toDeliveryDateReport = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
-
   inlaysTable: MatTableDataSource<RunningInaly> = new MatTableDataSource<RunningInaly>([]);
 
   constructor(
@@ -80,16 +77,46 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  private getOrders() {
-    this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
-    this.cdr.detectChanges();
-  }
+  private initDatasource(): void {
+    this.orders = [].concat.apply([], [...this.inlays.map(inlay => inlay.orders)]);
+    this.currRoutes = [].concat.apply([], [...this.inlays.map(inlay => inlay.route)])?.length;
+    this.currDrivers = [].concat.apply([], [...this.inlays.map(inlay => inlay.driver)])?.length;
 
-  private initDatasource(data: Order[]): void {
-    this.dataSource = new MatTableDataSource(data);
-    this.dataSource.filterPredicate = (order: Order, filter: string) => {
-      return JSON.stringify(order).indexOf(filter) != -1
-    };
+    if (this.driversCtrl.value?.length > 0) {
+      this.orders = this.orders
+        .filter((o: Order) => {
+            for (let i = 0; i < this.driversCtrl.value.length; i++) {
+              const driver = this.driversCtrl.value[i];
+              const find = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
+                .filter((rn: RunningInaly) => rn.driver.uid === driver)
+                .find((rn: RunningInaly) => rn.orders.map((or: Order) => or.uid).includes(o.uid));
+              if (!find) {
+                return false;
+              }
+            }
+  
+            return true;
+        });
+    }
+
+    if (this.routesCtrl.value?.length > 0) {
+      this.orders = this.orders
+        .filter((o: Order) => {
+            for (let i = 0; i < this.routesCtrl.value.length; i++) {
+              const route = this.routesCtrl.value[i];
+              const find = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
+                .filter((rn: RunningInaly) => rn.route.uid === route)
+                .find((rn: RunningInaly) => rn.orders.map((or: Order) => or.uid).includes(o.uid));
+              if (!find) {
+                return false;
+              }
+            }
+  
+            return true;
+        });
+    }
+
+    this.dataSource = new MatTableDataSource(this.orders);
     this.sortData({ active: 'deliveryDate', direction: 'asc' });
     this.cdr.detectChanges();
   }
@@ -142,6 +169,19 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   }
 
   private setInlays() {
+    this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
+      .filter((inlay: RunningInaly) => moment(inlay.date).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'));
+    
+    if (this.driversCtrl.value?.length > 0) {
+      this.inlays = this.inlays
+        .filter((inlay: RunningInaly) => this.driversCtrl.value ? this.driversCtrl.value.includes(inlay.driver.uid) : true);
+    }
+
+    if (this.routesCtrl.value?.length > 0) {
+      this.inlays = this.inlays
+        .filter((inlay: RunningInaly) => this.routesCtrl.value ? this.routesCtrl.value.includes(inlay.route.uid) : true);
+    }
+    
     this.inlaysTable = new MatTableDataSource<RunningInaly>(this.inlays);
     this.cdr.detectChanges();
   }
@@ -187,9 +227,6 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
 
   ngAfterViewInit(): void {
     this.loadingSubscription = this.isLoading.subscribe();
-    this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));
-
-    this.setInlays();
     this.cdr.detectChanges();
   }
 
@@ -271,7 +308,9 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   drivers: Driver[] = [];
   routes: Route[] = [];
   driverConstraints: DriverConstraint[] = [];
-  
+  currRoutes: number = 0;
+  currDrivers: number = 0;
+
   random: Number | undefined;
   loggedInUserId: any;
 
@@ -292,12 +331,8 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   };
 
   getData(): void {
-    this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'));
-    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
-      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
-    this.routes = JSON.parse(this.sessionStorageService.getItem('routes'));
-    this.driverConstraints = JSON.parse(this.sessionStorageService.getItem('driver-constraints'));
-
+    this.ordersMap = new Map<string, any>();
+    this.chartColors = new Map<string, string>();
     this.chartColors.set(OrderStatus.PENDING, '#72AFF2');
     this.chartColors.set(OrderStatus.REFUND, '#B4EDD2');
     this.chartColors.set(OrderStatus.INLAY, '#BFBFF3');
@@ -348,8 +383,13 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   }
 
   ngOnInit(): void {
-    this.today = moment().format('LLLL');
     this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
+    this.routes = JSON.parse(this.sessionStorageService.getItem('routes'));
+    this.drivers = JSON.parse(this.sessionStorageService.getItem('drivers'))
+      .sort((d1: Driver, d2: Driver) => d1.displayName.localeCompare(d2.displayName));
+    
+    this.driverConstraints = JSON.parse(this.sessionStorageService.getItem('driver-constraints'));
+    this.today = moment().format('LLLL');
 
     // Look for logged in user first
     if (sessionStorage.getItem('user') != null) {
@@ -357,50 +397,35 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
       if (temp != null) {
         let user = JSON.parse(temp);
         this.loggedInUserId = user?.uid;
+        this.setInlays();
+        this.initDatasource();
         this.getData();
-        this.getOrders();
       }
     } else {
       this.afAuth.authState.subscribe((auth) => {
         this.loggedInUserId = auth?.uid;
+        this.setInlays();
+        this.initDatasource();
         this.getData();
-        this.getOrders();
       });
     }
 
-    merge(
+    combineLatest([
       this.driversCtrl.valueChanges.pipe(startWith(this.driversCtrl.value)),
+      this.routesCtrl.valueChanges.pipe(startWith(this.routesCtrl.value)),
       this.fromDeliveryDate.valueChanges.pipe(startWith(this.fromDeliveryDate.value)),
       this.toDeliveryDate.valueChanges.pipe(startWith(this.toDeliveryDate.value))
-    ).pipe(
+    ]).pipe(
       tap(() => {
-        this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
-          .filter((inlay: RunningInaly) => moment(inlay.date).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
-          .filter((inlay: RunningInaly) => this.driversCtrl.value ? this.driversCtrl.value.includes(inlay.driver.uid) : true);
         this.setInlays();
+        this.initDatasource();
+        this.getData();
       })
-    ).subscribe();
-
-    merge(
-      this.driversReportCtrl.valueChanges.pipe(startWith(this.driversReportCtrl.value)),
-      this.fromDeliveryDateReport.valueChanges.pipe(startWith(this.fromDeliveryDateReport.value)),
-      this.toDeliveryDateReport.valueChanges.pipe(startWith(this.toDeliveryDateReport.value))
-    ).pipe(
-      tap(() => {
-        this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
-        this.initDatasource(this.orders
-          .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDateReport.value), moment(this.toDeliveryDateReport.value), 'days', '[]'))
-          .filter((o: Order) => this.driversReportCtrl.value ? this.isDriverOrder(this.driversReportCtrl.value, o) : true)
-        )
-      })
-    ).subscribe();
+    ).subscribe(() => {
+      console.log(this.dataSource.data);
+    });
 
     this.cdr.detectChanges();
-  }
-
-  isDriverOrder(driver: Driver, order: Order) {
-    const inlays = JSON.parse(this.sessionStorageService.getItem('inlays'));
-    return !!inlays.find((inlay: RunningInaly) => inlay.orders.map((o: Order) => o.uid).includes(order.uid) && inlay.driver.uid === driver.uid);
   }
 
   export() {

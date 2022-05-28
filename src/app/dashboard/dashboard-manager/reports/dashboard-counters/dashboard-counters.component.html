@@ -1,74 +1,14 @@
 
 <h1>סטטוס מערכת עדכני ({{today}})</h1>
-
-<div class="dashboard-counters">
-    <div class="dashboard-counters__item" id="inlays">
-        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--inlays">
-            <mat-icon>departure_board</mat-icon>
-        </div>
-        <div class="dashboard-counters__item-text">
-            <h1 class="dashboard-counters__item-count">
-                <span [countUp]="inlays.length" [options]="countUpOptionsCounter"></span>
-            </h1>
-            <p class="dashboard-counters__item-description">סה״כ שיבוצים</p>
-        </div>
-    </div>
-
-    <div class="dashboard-counters__separator"></div>
-
-    <div class="dashboard-counters__item" id="orders">
-        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--orders">
-            <mat-icon>date_range</mat-icon>
-        </div>
-        <div class="dashboard-counters__item-text">
-            <h1 class="dashboard-counters__item-count">
-                <span [countUp]="orders.length" [options]="countUpOptionsCounter"></span>
-            </h1>
-            <p class="dashboard-counters__item-description">סה״כ הזמנות</p>
-        </div>
-    </div>
-
-    <div class="dashboard-counters__item" id="drivers">
-        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--drivers">
-            <mat-icon>local_shipping</mat-icon>
-        </div>
-        <div class="dashboard-counters__item-text">
-            <h1 class="dashboard-counters__item-count">
-                <span [countUp]="drivers.length" [options]="countUpOptionsCounter"></span>
-            </h1>
-            <p class="dashboard-counters__item-description">נהגים</p>
-        </div>
-    </div>
-    
-    <div class="dashboard-counters__separator"></div>
-
-    <div class="dashboard-counters__item" id="routes">
-        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--routes">
-            <mat-icon>map</mat-icon>
-        </div>
-        <div class="dashboard-counters__item-text">
-            <h1 class="dashboard-counters__item-count">
-                <span [countUp]="routes.length" [options]="countUpOptionsCounter"></span>
-            </h1>
-            <p class="dashboard-counters__item-description">מסלולים</p>
-        </div>
-    </div>
-</div>
-
-<div class="dashboard-by-location__canvas">
-
-    <canvas baseChart class="dashboard-by-location__canvas" [data]="doughnutChartData" [labels]="doughnutChartLabels"
-        [chartType]="doughnutChartType" [plugins]="doughnutChartPlugins" [options]="doughnutChartOptions"
-        [colors]="doughnutChartColors">
-    </canvas>
-
-</div>
-
-
-<h3>שיבוצים</h3>
-
-<br>
+<br><br>
 <div class="date-filters">
+
+    <mat-form-field>
+        <mat-label>מסלולים</mat-label>
+        <mat-select multiple [formControl]="routesCtrl">
+            <mat-option *ngFor="let r of routes" [value]="r.uid"> {{r.name}} </mat-option>
+        </mat-select>
+    </mat-form-field>
 
     <mat-form-field>
         <mat-label>נהגים</mat-label>
@@ -88,6 +28,78 @@
 
     <button class="export" type="submit" (click)="export()" mat-raised-button color="primary">ייצא דו״ח מערכת</button>
 </div>
+
+<div class="dashboard-counters">
+    <div class="dashboard-counters__item" id="inlays">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--inlays">
+            <mat-icon>departure_board</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="inlays.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">סה״כ שיבוצים</p>
+        </div>
+    </div>
+
+    <div class="dashboard-counters__separator"></div>
+
+    <div class="dashboard-counters__item" id="data-orders">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--orders">
+            <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="orders.length" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">סה״כ הזמנות</p>
+        </div>
+    </div>
+
+    <div class="dashboard-counters__item" id="data-drivers">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--drivers">
+            <mat-icon>local_shipping</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="currDrivers" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">נהגים</p>
+        </div>
+    </div>
+    
+    <div class="dashboard-counters__separator"></div>
+
+    <div class="dashboard-counters__item" id="data-routes">
+        <div class="dashboard-counters__item-svg-container dashboard-counters__item-svg-container--routes">
+            <mat-icon>map</mat-icon>
+        </div>
+        <div class="dashboard-counters__item-text">
+            <h1 class="dashboard-counters__item-count">
+                <span [countUp]="currRoutes" [options]="countUpOptionsCounter"></span>
+            </h1>
+            <p class="dashboard-counters__item-description">מסלולים</p>
+        </div>
+    </div>
+</div>
+
+<!-- <div class="dashboard-by-location__canvas">
+
+    <canvas baseChart class="dashboard-by-location__canvas" [data]="doughnutChartData" [labels]="doughnutChartLabels"
+        [chartType]="doughnutChartType" [plugins]="doughnutChartPlugins" [options]="doughnutChartOptions"
+        [colors]="doughnutChartColors">
+    </canvas>
+
+</div> -->
+
+
+<br>
+<br>
+<br>
+<br>
+<h3>שיבוצים</h3>
+
+<br>
 
 <div class="table-container">
     <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
@@ -222,29 +234,5 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
-</div>
-
-<br>
-<h3>ייצוא דוחות</h3>
-
-<br>
-<div class="date-filters">
-
-    <mat-form-field>
-    <mat-label>נהגים</mat-label>
-        <mat-select multiple [formControl]="driversReportCtrl">
-            <mat-option *ngFor="let d of drivers" [value]="d.uid"> {{d.displayName}} </mat-option>
-        </mat-select>
-    </mat-form-field>
-
-    <mat-form-field>
-        <input matInput type="date" placeholder="הזמנות מתאריך אספקה" [formControl]="fromDeliveryDateReport" id="fromDeliveryDateReport">
-    </mat-form-field>
-
-    <mat-form-field>
-        <input matInput type="date" placeholder="עד לתאריך אספקה" [formControl]="toDeliveryDateReport" id="toDeliveryDateReport">
-    </mat-form-field>
-
-    <button class="export" type="submit" (click)="export()" mat-raised-button color="primary">ייצא דו״ח מערכת</button>
 </div>
 
