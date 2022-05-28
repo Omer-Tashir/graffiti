@@ -4,6 +4,6 @@ import { User } from "./user.interface";
 
 export interface Driver extends User {
     workingStartDate: Date;
-    licenseType: LicenseType;
-    truck: Truck;
+    licenseType: LicenseType; // סוג רישיון
+    truck: Truck; // משאית
 }

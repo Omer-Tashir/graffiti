@@ -1,8 +1,8 @@
 import { OrderStatus } from "./order-status.enum";
 
 export interface Order {
-    uid: string;
-    name: string;
+    uid: string; // מפתח ראשי
+    name: string; // מפתח משני - שם הלקוח
     phone: string;
     deliveryCity: string; //כתובת מחסן מקבל
     deliveryAddress: string; //כתובת מחסן מקבל

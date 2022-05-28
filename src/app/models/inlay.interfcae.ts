@@ -6,7 +6,7 @@ export interface Inlay {
     uid: string;
     orderDate: any;
     date: any;
-    order: Order;
-    driver: Driver;
-    route: Route;
+    order: Order; // הזמנה
+    driver: Driver; // נהג מקושר למשאית
+    route: Route; // מסלול
 }
