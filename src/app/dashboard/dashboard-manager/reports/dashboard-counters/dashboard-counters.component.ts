@@ -36,6 +36,7 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
   public loadingSubscription: any;
 
   driversCtrl = new FormControl();
+  driversReportCtrl = new FormControl();
   displayedColumns: string[] = ['name', 'phone', 'deliveryCity', 'deliveryAddress', 'deliveryAddressNumber', 'deliveryDate', 'orderWeight', 'orderStatus', 'important', 'description'];
   dataSource!: MatTableDataSource<Order>;
   OrderStatus = OrderStatus;
@@ -56,6 +57,9 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
 
   fromDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
   toDeliveryDate = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
+
+  fromDeliveryDateReport = new FormControl(this.datePipe.transform(moment().startOf('day').toDate(), 'yyyy-MM-dd'));
+  toDeliveryDateReport = new FormControl(this.datePipe.transform(moment().startOf('day').add(2, 'days').toDate(), 'yyyy-MM-dd'));
 
   inlaysTable: MatTableDataSource<RunningInaly> = new MatTableDataSource<RunningInaly>([]);
 
@@ -364,15 +368,39 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
       });
     }
 
-    combineLatest([
+    merge(
+      this.driversCtrl.valueChanges.pipe(startWith(this.driversCtrl.value)),
       this.fromDeliveryDate.valueChanges.pipe(startWith(this.fromDeliveryDate.value)),
       this.toDeliveryDate.valueChanges.pipe(startWith(this.toDeliveryDate.value))
-    ]).pipe(
-      tap(() => this.initDatasource(this.orders
-        .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))))
+    ).pipe(
+      tap(() => {
+        this.inlays = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
+          .filter((inlay: RunningInaly) => moment(inlay.date).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
+          .filter((inlay: RunningInaly) => this.driversCtrl.value ? this.driversCtrl.value.includes(inlay.driver.uid) : true);
+        this.setInlays();
+      })
+    ).subscribe();
+
+    merge(
+      this.driversReportCtrl.valueChanges.pipe(startWith(this.driversReportCtrl.value)),
+      this.fromDeliveryDateReport.valueChanges.pipe(startWith(this.fromDeliveryDateReport.value)),
+      this.toDeliveryDateReport.valueChanges.pipe(startWith(this.toDeliveryDateReport.value))
+    ).pipe(
+      tap(() => {
+        this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
+        this.initDatasource(this.orders
+          .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDateReport.value), moment(this.toDeliveryDateReport.value), 'days', '[]'))
+          .filter((o: Order) => this.driversReportCtrl.value ? this.isDriverOrder(this.driversReportCtrl.value, o) : true)
+        )
+      })
     ).subscribe();
 
     this.cdr.detectChanges();
+  }
+
+  isDriverOrder(driver: Driver, order: Order) {
+    const inlays = JSON.parse(this.sessionStorageService.getItem('inlays'));
+    return !!inlays.find((inlay: RunningInaly) => inlay.orders.map((o: Order) => o.uid).includes(order.uid) && inlay.driver.uid === driver.uid);
   }
 
   export() {

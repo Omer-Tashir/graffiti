@@ -33,62 +33,71 @@ export class AlgorithemService {
     private sessionStorageService: SessionStorageService,
   ) { }
 
-  async run(orders: Order[]): Promise<RunningInaly[]> {
-    let runningInalys: RunningInaly[] = [];
-
+  async run(orders: Order[], runningInalys: RunningInaly[]): Promise<RunningInaly[]> {
     const drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
     const routes = JSON.parse(this.sessionStorageService.getItem('routes'));
     
     // שלב א׳ - מסלולים קבועים בימים קבועים
-    for (let d = new Date().getDay(); d < this.days.length; d++) {
-      let dailyRoutes: Route[] = routes
-        .filter((r: Route) => r.distributionDays.includes(this.days[d]));
+    //for (let d = new Date().getDay(); d < this.days.length; d++) {
+    let d = moment().add(1, 'days').toDate().getDay();
+    let dailyRoutes: Route[] = routes
+      .filter((r: Route) => r.distributionDays.includes(this.days[d]));
       
-      let dailyOrders: Order[] = orders
-        .filter(o => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
-        .filter(o => this.days[moment(o.deliveryDate).toDate().getDay()] === this.days[d]);
+    let dailyOrders: Order[] = orders
+      .filter(o => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus));
+    //.filter(o => this.days[moment(o.deliveryDate).toDate().getDay()] === this.days[d]);
       
-      // דילוג על ימים שבהם אין הזמנות
-      if (dailyOrders.length === 0) {
-        continue;
-      }
+    // // דילוג על ימים שבהם אין הזמנות
+    // if (dailyOrders.length === 0) {
+    //   continue;
+    // }
       
-      let dailyRoutesDriver = dailyRoutes.map((dr: Route) => {
-        const availableDrivers = drivers
-          .filter((driver: Driver) => driver.licenseType == dr.licenseType)
-          .filter((driver: Driver) => this.isDriverAvailable(driver, moment().startOf('week').add('days', d).toDate()));
+    let dailyRoutesDriver = dailyRoutes.map((dr: Route) => {
+      const availableDrivers = drivers
+        .filter((driver: Driver) => dr.licenseType === driver.licenseType)
+        .filter((driver: Driver) => this.isDriverAvailable(driver, moment().add(1, 'days').toDate()))
+        .filter((driver: Driver) => !runningInalys.map(i => i.driver.uid).includes(driver.uid));
         
-        return {
-          route: dr,
-          driver: availableDrivers[Math.floor(Math.random() * availableDrivers.length)] // random driver
-        };
-      }).filter(res => !!res.driver);
+      return {
+        route: dr,
+        driver: availableDrivers[Math.floor(Math.random() * availableDrivers.length)] // random driver
+      };
+    }).filter(res => !!res.driver);
 
-      const areas = dailyOrders.map((o: Order) => o.deliveryCity);
-      const selectedDailyRouteDriver = dailyRoutesDriver
-        .find(drd => drd.route.distributionAreas
-          .some((area: string) => areas.includes(area)));
-      
-      if (selectedDailyRouteDriver) {
+    for (let i = 0; i < dailyRoutesDriver.length; i++) {
+      const selectedDailyRouteDriver: any = dailyRoutesDriver[i];
+      selectedDailyRouteDriver.orders = dailyOrders
+        .filter((o: Order) => selectedDailyRouteDriver.route.distributionAreas
+          .map((d: string) => d.replace(/ /g, '')).includes(o.deliveryCity.replace(/ /g, '')));
+
+      // const areas = dailyOrders.map((o: Order) => o.deliveryCity.replace(/ /g, ''));
+      // const selectedDailyRouteDriver = dailyRoutesDriver
+      //   .filter(drd => drd.route.distributionAreas
+      //     .every((area: string) => areas.includes(area.replace(/ /g, ''))));
+        
+      if (selectedDailyRouteDriver.orders.length) {
         // sort orders by weight
-        dailyOrders = dailyOrders.sort((o1, o2) => o1.orderWeight - o2.orderWeight);
+        selectedDailyRouteDriver.orders = selectedDailyRouteDriver.orders
+          .sort((o1: Order, o2: Order) => o1.orderWeight - o2.orderWeight)
+          .sort((o1: Order, o2: Order) => Number(o2.important) - Number(o1.important))
+        console.log(selectedDailyRouteDriver);
 
         // remove orders until weight is ok
-        while (this.isOverweight(dailyOrders, selectedDailyRouteDriver.driver)) {
-          dailyOrders.pop();
+        while (this.isOverweight(selectedDailyRouteDriver.orders, selectedDailyRouteDriver.driver)) {
+          selectedDailyRouteDriver.orders.pop();
         }
-      
-        if (dailyOrders?.length) {
+        
+        if (selectedDailyRouteDriver.orders?.length) {
           // סימון כשובץ
-          dailyOrders.forEach(order => {
+          selectedDailyRouteDriver.orders.forEach((order: Order) => {
             order.orderStatus = OrderStatus.INLAY;
           });
 
           // ביצוע אלגוריתם לקבלת מסלול אופטימלי בין נקודות
-          const res = await this.getOptimizedRoute(dailyOrders, selectedDailyRouteDriver.driver, selectedDailyRouteDriver.route);
+          const res = await this.getOptimizedRoute(selectedDailyRouteDriver.orders, selectedDailyRouteDriver.driver, selectedDailyRouteDriver.route);
 
           runningInalys.push({
-            date: moment().startOf('week').add('days', d).toDate(),
+            date: moment().add(1, 'days').toDate(),
             driver: selectedDailyRouteDriver.driver,
             route: selectedDailyRouteDriver.route,
             distance: res.distance ?? '',
@@ -99,6 +108,7 @@ export class AlgorithemService {
         }
       }
     }
+    //}
 
     return runningInalys;
   }

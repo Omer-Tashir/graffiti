@@ -67,6 +67,28 @@
 
 <h3>שיבוצים</h3>
 
+<br>
+<div class="date-filters">
+
+    <mat-form-field>
+        <mat-label>נהגים</mat-label>
+        <mat-select multiple [formControl]="driversCtrl">
+            <mat-option *ngFor="let d of drivers" [value]="d.uid"> {{d.displayName}} </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+        <input matInput type="date" placeholder="הזמנות מתאריך אספקה" [formControl]="fromDeliveryDate"
+            id="fromDeliveryDate">
+    </mat-form-field>
+
+    <mat-form-field>
+        <input matInput type="date" placeholder="עד לתאריך אספקה" [formControl]="toDeliveryDate" id="toDeliveryDate">
+    </mat-form-field>
+
+    <button class="export" type="submit" (click)="export()" mat-raised-button color="primary">ייצא דו״ח מערכת</button>
+</div>
+
 <div class="table-container">
     <table mat-table [dataSource]="inlaysTable" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
 
@@ -208,19 +230,19 @@
 <br>
 <div class="date-filters">
 
-    <!-- <mat-form-field>
+    <mat-form-field>
     <mat-label>נהגים</mat-label>
-        <mat-select multiple [formControl]="driversCtrl">
+        <mat-select multiple [formControl]="driversReportCtrl">
             <mat-option *ngFor="let d of drivers" [value]="d.uid"> {{d.displayName}} </mat-option>
         </mat-select>
-    </mat-form-field> -->
-
-    <mat-form-field>
-        <input matInput type="date" placeholder="הזמנות מתאריך אספקה" [formControl]="fromDeliveryDate" id="fromDeliveryDate">
     </mat-form-field>
 
     <mat-form-field>
-        <input matInput type="date" placeholder="עד לתאריך אספקה" [formControl]="toDeliveryDate" id="toDeliveryDate">
+        <input matInput type="date" placeholder="הזמנות מתאריך אספקה" [formControl]="fromDeliveryDateReport" id="fromDeliveryDateReport">
+    </mat-form-field>
+
+    <mat-form-field>
+        <input matInput type="date" placeholder="עד לתאריך אספקה" [formControl]="toDeliveryDateReport" id="toDeliveryDateReport">
     </mat-form-field>
 
     <button class="export" type="submit" (click)="export()" mat-raised-button color="primary">ייצא דו״ח מערכת</button>

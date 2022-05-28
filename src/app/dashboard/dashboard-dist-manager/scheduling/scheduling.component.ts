@@ -179,13 +179,19 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  markForInaly(order: Order): void {
+    this.ordersTable.data.push(order);
+    this.cdr.detectChanges();
+  }
+
   private setOrders() {
     this.orders = this.originalOrders
       .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
       .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
     
     this.unsuppliedOrders = this.originalOrders
-      .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus));
+      .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
+      .filter((o: Order) => this.isOrderDelay(o));
     
     this.ordersTable = new MatTableDataSource<Order>(this.orders);
     this.unsuppliedOrdersTable = new MatTableDataSource<Order>(this.unsuppliedOrders);
@@ -252,23 +258,39 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  runAlgorithem(): void {
-    this.algorithemService.run(this.orders).then(res => {
-      console.log(res);
+  async runAlgorithem(): Promise<void> {
+    let finishAlgo = false;
+    let iterations = 0;
+    let resLength = 0;
+
+    while (!finishAlgo) {
+      const res = await this.algorithemService.run(this.ordersTable.data, this.inlays);
       if (res?.length) {
+        if (res.length != resLength) {
+          resLength = res.length;
+        }
+        else {
+          break;
+        }
+
+        iterations += 1;
         if (!this.inlays) {
           this.inlays = [];
         }
         
-        this.inlays = [...this.inlays, ...res].sort((a, b) => a.date - b.date);
+        this.inlays = [...this.inlays].sort((a, b) => a.date - b.date);
         this.setOrders();
         this.setInlays();
         this.cdr.detectChanges();
       }
       else {
+        finishAlgo = true;
+        if (iterations === 0) {
           this.alertService.ok(`האלגוריתם הורץ בהצלחה`, `לא נמצאו שיבוצים אפשריים עבור טווח התאריכים`);
+        }
+        this.cdr.detectChanges();
       }
-    });
+    }
   }
 
   inlaysAgree(): void {
@@ -315,16 +337,7 @@ export class SchedulingComponent implements AfterViewInit, OnDestroy {
 
     this.orders = this.orders
       .filter((o: Order) => ![OrderStatus.DELIVERD, OrderStatus.INLAY].includes(o.orderStatus))
-      .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'))
-      .map(order => {
-        order.important = order.important || this.getDeliveryDateStr(order.deliveryDate) === 'ההזמנה באיחור';
-        return order;
-    });
-
-    this.originalOrders = this.originalOrders.map(order => {
-      order.important = order.important || this.getDeliveryDateStr(order.deliveryDate) === 'ההזמנה באיחור';
-      return order;
-    });
+      .filter((o: Order) => moment(o.deliveryDate).isBetween(moment(this.fromDeliveryDate.value), moment(this.toDeliveryDate.value), 'days', '[]'));
 
     this.setOrders();
     this.setInlays();
