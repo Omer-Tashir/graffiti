@@ -331,8 +331,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
 
       /* save data */
       const data: any = XLSX.utils.sheet_to_json(ws); // to get 2d array pass 2nd parameter as object {header: 1}
-      console.log(data);
 
+      let errors = 0;
       for (let i = 0; i < data.length; i++) {
         let order: Order = {
           uid: this.globals.randomAlphaNumeric(20),
@@ -348,7 +348,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
           description: data[i]['הערות'] ?? ''
         } as Order;
 
-        this.db
+        if (this.validateUploadedOrder(order)) {
+          this.db
           .putOrder(order, true)
           .then(() => {
             this.orders = JSON.parse(this.sessionStorageService.getItem('orders'));
@@ -362,12 +363,24 @@ export class OrdersComponent implements OnInit, AfterViewInit {
             this.isLoading = false;
             this.cdr.detectChanges();
           });
+        }
+        else {
+          errors += 1;
+        }
       }
 
-      this.alertService.ok(
-        'הפועלה בוצעה בהצלחה',
-        'הקובץ נטען במערכת'
-      );
+      if (errors == 0) {
+        this.alertService.ok(
+          'הפועלה בוצעה בהצלחה',
+          `${data.length} הזמנות נטענו למערכת בהצלחה`
+        );
+      }
+      else {
+        this.alertService.ok(
+          'התרחשו שגיאות בהעלאת הקובץ',
+          `נמצאו ${errors} שורות שלא ניתן היה להמיר להזמנה תקינה`
+        );
+      }
 
       this.isNewRecord = true;
       this.form.reset();
@@ -375,6 +388,23 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     };
 
     this.cdr.detectChanges();
+  }
+
+  private validateUploadedOrder(order: Order): boolean {
+    // בדיקה של שדות חובה
+    if (!order.name || !order.phone || !order.deliveryCity || !order.deliveryAddress || !order.deliveryAddressNumber || !order.deliveryDate || !order.orderWeight) {
+      return false;
+    }
+    // בדיקה שהעיר שהוזנה תואמת לערים ברשימה המוגדרת במערכת
+    else if (!this.cities.filter(city => city['name'] == order.deliveryCity)) {
+      return false;
+    }
+    // בדיקה שהרחוב שהוזן הוא רחוב תקין המוגדר ברשימת הרחובות במערכת
+    else if (!this.streets.filter(street => street['שם_רחוב'] == order.deliveryAddress)) {
+      return false;
+    }
+
+    return true;
   }
 
   ngOnInit(): void {
