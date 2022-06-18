@@ -90,12 +90,12 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
               const find = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
                 .filter((rn: RunningInaly) => rn.driver.uid === driver)
                 .find((rn: RunningInaly) => rn.orders.map((or: Order) => or.uid).includes(o.uid));
-              if (!find) {
-                return false;
+              if (find) {
+                return true;
               }
             }
   
-            return true;
+            return false;
         });
     }
 
@@ -107,12 +107,12 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
               const find = JSON.parse(this.sessionStorageService.getItem('running-inlays'))
                 .filter((rn: RunningInaly) => rn.route.uid === route)
                 .find((rn: RunningInaly) => rn.orders.map((or: Order) => or.uid).includes(o.uid));
-              if (!find) {
-                return false;
+              if (find) {
+                return true;
               }
             }
   
-            return true;
+            return false;
         });
     }
 
@@ -421,9 +421,7 @@ export class DashboardCountersComponent implements OnInit, AfterViewInit, OnDest
         this.initDatasource();
         this.getData();
       })
-    ).subscribe(() => {
-      console.log(this.dataSource.data);
-    });
+    ).subscribe();
 
     this.cdr.detectChanges();
   }

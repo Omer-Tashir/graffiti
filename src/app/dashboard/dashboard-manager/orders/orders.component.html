@@ -122,23 +122,23 @@
             </mat-form-field> -->
 
             <mat-form-field>
-                <input matInput type="text" placeholder="שם לקוח" formControlName="name" id="name">
+                <input matInput type="text" placeholder="שם לקוח" formControlName="name" id="name" required>
             </mat-form-field>
 
             <mat-form-field>
-                <input matInput type="tel" placeholder="טלפון" formControlName="phone" id="phone">
+                <input matInput type="tel" placeholder="טלפון" formControlName="phone" id="phone" required>
             </mat-form-field>
             
             <mat-form-field>
-                <input matInput type="date" placeholder="תאריך אספקה" formControlName="deliveryDate" id="deliveryDate">
+                <input matInput type="date" placeholder="תאריך אספקה" formControlName="deliveryDate" id="deliveryDate" required>
             </mat-form-field>
             
             <mat-form-field>
-                <input matInput type="number" placeholder="משקל (טון)" formControlName="orderWeight" id="orderWeight">
+                <input matInput type="number" placeholder="משקל (טון)" formControlName="orderWeight" id="orderWeight" required>
             </mat-form-field>
             
             <mat-form-field>
-                <input matInput type="text" placeholder="עיר מגורים" formControlName="deliveryCity" id="deliveryCity" [matAutocomplete]="autoCities"
+                <input matInput type="text" placeholder="עיר מגורים" formControlName="deliveryCity" id="deliveryCity" required [matAutocomplete]="autoCities"
                     (blur)="checkCity()" autocomplete="off">
                 <mat-autocomplete autoActiveFirstOption #autoCities="matAutocomplete" (optionSelected)="cityClick($event)">
                     <mat-option *ngFor="let deliveryCity of filteredCities | async" [value]="deliveryCity.name">
@@ -149,7 +149,7 @@
 
             <div class="inner-grid">
                 <mat-form-field>
-                    <input matInput type="text" placeholder="רחוב" formControlName="deliveryAddress" id="deliveryAddress"
+                    <input matInput type="text" placeholder="רחוב" formControlName="deliveryAddress" id="deliveryAddress" required
                         [matAutocomplete]="autoAddresses" (blur)="checkStreet()" autocomplete="off">
                     <mat-autocomplete autoActiveFirstOption #autoAddresses="matAutocomplete" (optionSelected)="streetClick($event)">
                         <mat-option *ngFor="let street of filteredStreets | async" [value]="street['שם_רחוב']">
@@ -159,13 +159,13 @@
                 </mat-form-field>
 
                 <mat-form-field>
-                    <input matInput type="number" placeholder="מס' בית" formControlName="deliveryAddressNumber" id="deliveryAddressNumber">
+                    <input matInput type="number" placeholder="מס' בית" formControlName="deliveryAddressNumber" required id="deliveryAddressNumber">
                 </mat-form-field>
             </div>
             
             <mat-form-field>
                 <mat-label>סטטוס</mat-label>
-                <mat-select formControlName="orderStatus" id="orderStatus">
+                <mat-select formControlName="orderStatus" id="orderStatus" required>
                     <mat-option *ngFor="let type of OrderStatus | keyvalue" [value]="type.value"> {{type.value}} </mat-option>
                 </mat-select>
             </mat-form-field>

@@ -6,29 +6,29 @@
 
         <mat-card-content>
             <mat-form-field>
-                <input matInput type="text" placeholder="מזהה נהג" formControlName="uid" id="uid">
+                <input matInput type="text" placeholder="מזהה נהג" formControlName="uid" id="uid" required>
             </mat-form-field>
 
             <mat-form-field>
-                <input matInput type="text" placeholder="שם מלא" formControlName="displayName" id="displayName">
+                <input matInput type="text" placeholder="שם מלא" formControlName="displayName" id="displayName" required>
                 <mat-error *ngIf="hasError('displayName', 'required')">חובה להזין שם מלא</mat-error>
             </mat-form-field>
 
             <mat-form-field>
-                <input matInput type="email" placeholder="אימייל" formControlName="email" id="email">
+                <input matInput type="email" placeholder="אימייל" formControlName="email" id="email" required>
                 <mat-error *ngIf="hasError('email', 'email')">כתובת מייל לא תקינה</mat-error>
                 <mat-error *ngIf="hasError('email', 'required')">חובה להזין כתובת מייל</mat-error>
             </mat-form-field>
 
             <mat-form-field>
-                <input matInput type="tel" placeholder="מספר טלפון" formControlName="phoneNumber" id="phoneNumber">
+                <input matInput type="tel" placeholder="מספר טלפון" formControlName="phoneNumber" id="phoneNumber" required>
                 <mat-error *ngIf="hasError('phoneNumber', 'required')">חובה להזין מספר טלפון</mat-error>
             </mat-form-field>
 
             <mat-form-field>
-                <input matInput type="text" placeholder="עיר מגורים" formControlName="city" id="city"
+                <input matInput type="text" placeholder="עיר מגורים" formControlName="city" id="city" required
                     [matAutocomplete]="autoCities" (blur)="checkCity()" autocomplete="off">
-                <mat-autocomplete autoActiveFirstOption #autoCities="matAutocomplete"
+                <mat-autocomplete required autoActiveFirstOption #autoCities="matAutocomplete"
                     (optionSelected)="cityClick($event)">
                     <mat-option *ngFor="let city of filteredCities | async" [value]="city.name">
                         {{ city.name }}
@@ -38,9 +38,9 @@
 
             <div class="inner-grid">
                 <mat-form-field>
-                    <input matInput type="text" placeholder="רחוב" formControlName="address" id="address"
+                    <input matInput type="text" placeholder="רחוב" formControlName="address" id="address" required
                         [matAutocomplete]="autoAddresses" (blur)="checkStreet()" autocomplete="off">
-                    <mat-autocomplete autoActiveFirstOption #autoAddresses="matAutocomplete"
+                    <mat-autocomplete required autoActiveFirstOption #autoAddresses="matAutocomplete"
                         (optionSelected)="streetClick($event)">
                         <mat-option *ngFor="let street of filteredStreets | async" [value]="street['שם_רחוב']">
                             {{ street['שם_רחוב'] }}
@@ -49,7 +49,7 @@
                 </mat-form-field>
 
                 <mat-form-field>
-                    <input matInput type="number" placeholder="מס' בית" formControlName="addressNumber"
+                    <input matInput type="number" placeholder="מס' בית" required formControlName="addressNumber"
                         id="addressNumber">
                 </mat-form-field>
             </div>

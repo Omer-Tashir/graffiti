@@ -51,7 +51,7 @@ export class AlgorithemService {
     // if (dailyOrders.length === 0) {
     //   continue;
     // }
-      
+    
     let dailyRoutesDriver = dailyRoutes.map((dr: Route) => {
       const availableDrivers = drivers
         .filter((driver: Driver) => dr.licenseType === driver.licenseType)

@@ -103,26 +103,26 @@
             </mat-form-field> -->
 
             <mat-form-field>
-                <input matInput type="text" placeholder="שם המסלול" formControlName="name" id="name">
+                <input required matInput type="text" placeholder="שם המסלול" formControlName="name" id="name">
             </mat-form-field>
 
             <mat-form-field>
                 <mat-label>איזורי חלוקה</mat-label>
-                <mat-select multiple formControlName="distributionAreas" id="distributionAreas">
+                <mat-select required multiple formControlName="distributionAreas" id="distributionAreas">
                     <mat-option *ngFor="let area of distributionAreas" [value]="area">{{area}}</mat-option>
                 </mat-select>
             </mat-form-field>
 
             <mat-form-field>
                 <mat-label>ימי חלוקה</mat-label>
-                <mat-select multiple formControlName="distributionDays" id="distributionDays">
+                <mat-select required multiple formControlName="distributionDays" id="distributionDays">
                     <mat-option *ngFor="let day of days" [value]="day">{{day}}</mat-option>
                 </mat-select>
             </mat-form-field>
 
             <mat-form-field>
                 <mat-label>סוג רישיון</mat-label>
-                <mat-select formControlName="licenseType" id="licenseType">
+                <mat-select required formControlName="licenseType" id="licenseType">
                     <mat-option *ngFor="let type of LicenseType | keyvalue" [value]="type.value"> {{type.value}} </mat-option>
                 </mat-select>
             </mat-form-field>
