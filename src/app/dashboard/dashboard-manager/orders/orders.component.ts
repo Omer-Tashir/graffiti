@@ -396,11 +396,11 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       return false;
     }
     // בדיקה שהעיר שהוזנה תואמת לערים ברשימה המוגדרת במערכת
-    else if (!this.cities.filter(city => city['name'] == order.deliveryCity)) {
+    else if (!this.cities.find(city => city['name'] == order.deliveryCity)) {
       return false;
     }
     // בדיקה שהרחוב שהוזן הוא רחוב תקין המוגדר ברשימת הרחובות במערכת
-    else if (!this.streets.filter(street => street['שם_רחוב'] == order.deliveryAddress)) {
+    else if (!this.allStreets.find(street => street['שם_רחוב'] == order.deliveryAddress)) {
       return false;
     }
 
