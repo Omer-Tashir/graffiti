@@ -12,12 +12,16 @@ import { Driver } from '../models/driver.interface';
 import { DriverConstraint } from '../models/driver-constraint';
 import { LicenseType } from '../models/license-type.enum';
 import { RunningInaly } from '../models/running-inlay.interface';
+import { DatabaseService } from '../services/database.service';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlgorithemService {
+
+  private cities: any[] = [];
+  private allStreets: any[] = [];
   private days: string[] = [
     'ראשון',
     'שני',
@@ -30,13 +34,24 @@ export class AlgorithemService {
 
   constructor(
     public globals: Globals,
+    public db: DatabaseService,
     private sessionStorageService: SessionStorageService,
-  ) { }
+  ) {
+    this.db.getCitiesJSON().subscribe(data => {
+      this.cities = data;
+    });
+
+    this.db.getStreetsJSON().subscribe(data => {
+      this.allStreets = data;
+    });
+  }
 
   async run(orders: Order[], runningInalys: RunningInaly[]): Promise<RunningInaly[]> {
     const drivers = JSON.parse(this.sessionStorageService.getItem('drivers'));
     const routes = JSON.parse(this.sessionStorageService.getItem('routes'));
     
+    //debugger;
+
     // שלב א׳ - מסלולים קבועים בימים קבועים
     //for (let d = new Date().getDay(); d < this.days.length; d++) {
     let d = moment().add(1, 'days').toDate().getDay();
@@ -66,14 +81,12 @@ export class AlgorithemService {
 
     for (let i = 0; i < dailyRoutesDriver.length; i++) {
       const selectedDailyRouteDriver: any = dailyRoutesDriver[i];
-      selectedDailyRouteDriver.orders = dailyOrders
-        .filter((o: Order) => selectedDailyRouteDriver.route.distributionAreas
-          .map((d: string) => d.replace(/ /g, '')).includes(o.deliveryCity.replace(/ /g, '')));
+      selectedDailyRouteDriver.orders = this.getDriverSelectedOrders(selectedDailyRouteDriver, dailyOrders);
 
-      // const areas = dailyOrders.map((o: Order) => o.deliveryCity.replace(/ /g, ''));
+      // const areas = dailyOrders.map((o: Order) => o.deliveryCity);
       // const selectedDailyRouteDriver = dailyRoutesDriver
       //   .filter(drd => drd.route.distributionAreas
-      //     .every((area: string) => areas.includes(area.replace(/ /g, ''))));
+      //     .every((area: string) => areas.includes(area)));
         
       if (selectedDailyRouteDriver.orders.length) {
         // sort orders by weight
@@ -110,6 +123,14 @@ export class AlgorithemService {
     //}
 
     return runningInalys;
+  }
+
+  private getDriverSelectedOrders(selectedDailyRouteDriver: any, dailyOrders: Order[]): Order[] {
+    return dailyOrders.filter((o: Order) => selectedDailyRouteDriver.route.distributionAreas.map((d: string) => d).includes(this.getCityByArea(o.deliveryCity)));
+  }
+
+  private getCityByArea(area: string): string {
+    return this.cities.find((c: any) => c.name === area)?.lishka;
   }
 
   private isOverweight(orders: Order[], driver: Driver): boolean {
